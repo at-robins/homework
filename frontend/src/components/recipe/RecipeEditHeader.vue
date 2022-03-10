@@ -1,15 +1,84 @@
 <template>
-  <q-item-label class="text-h3">{{ recipe.title }}</q-item-label>
+  <div class="row no-wrap">
+    <q-item-label v-if="!editTitleMode" class="text-h3 shrink q-ma-sm">{{
+      titleModel
+    }}</q-item-label>
+    <q-input
+      v-else
+      ref="titleInputRef"
+      v-model="titleModel"
+      @blur="updateTitle"
+      @keydown.enter="updateTitle"
+      :readonly="isUpdatingTitle"
+      class="text-h3 col-grow q-ma-sm"
+    />
+    <q-btn
+      v-if="!editTitleMode"
+      round
+      icon="edit"
+      class="self-start"
+      :color="!updateTitleErrorMessage ? 'primary' : 'negative'"
+      outline
+      size="sm"
+      @click="editTitleField"
+    >
+      <q-tooltip>
+        <div v-if="!updateTitleErrorMessage">Rezepttitel bearbeiten</div>
+        <div v-else>
+          {{ updateTitleErrorMessage }}
+        </div>
+      </q-tooltip>
+    </q-btn>
+    <q-btn v-else round class="self-start" color="primary" outline size="sm">
+      <q-spinner v-if="isUpdatingTitle" color="primary" />
+      <q-icon v-else name="done" color="primary" />
+    </q-btn>
+  </div>
+  <div class="row no-wrap">
+    <div v-if="!editReferenceMode" class="text-h5 shrink q-ma-sm">
+      Referenz: {{ referenceModel }}
+    </div>
+    <q-input
+      v-else
+      ref="referenceInputRef"
+      v-model="referenceModel"
+      @blur="updateReference"
+      @keydown.enter="updateReference"
+      :readonly="isUpdatingReference"
+      class="text-h5 col-grow q-ma-sm"
+    />
+    <q-btn
+      v-if="!editReferenceMode"
+      round
+      icon="edit"
+      class="self-start"
+      :color="!updateReferenceErrorMessage ? 'primary' : 'negative'"
+      outline
+      size="xs"
+      @click="editReferenceField"
+    >
+      <q-tooltip>
+        <div v-if="!updateReferenceErrorMessage">Rezeptreferenz bearbeiten</div>
+        <div v-else>
+          {{ updateReferenceErrorMessage }}
+        </div>
+      </q-tooltip>
+    </q-btn>
+    <q-btn v-else round class="self-start" color="primary" outline size="xs">
+      <q-spinner v-if="isUpdatingReference" color="primary" />
+      <q-icon v-else name="done" color="primary" />
+    </q-btn>
+  </div>
   <div class="row">
     <q-rating
-      class="col-auto"
+      class="col-auto q-ma-sm"
       v-model="ratingModel"
       max="10"
       size="3em"
       :color="!updateRatingErrorMessage ? 'yellow' : 'negative'"
       icon="star_border"
       icon-selected="star"
-      :disable="!!updateRatingErrorMessage"
+      :disable="!!updateRatingErrorMessage || isUpdatingRating"
     />
     <q-icon
       v-if="!!updateRatingErrorMessage"
@@ -26,7 +95,7 @@
 <script setup lang="ts">
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { ref, watch } from "vue";
+import { nextTick, ref, watch, type Ref } from "vue";
 
 const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },
@@ -36,14 +105,21 @@ const isUpdatingRating = ref(false);
 const updateRatingErrorMessage = ref("");
 const ratingModel = ref(props.recipe.rating);
 
-let updatingInstructionsTimer: number | null = null;
+const isUpdatingTitle = ref(false);
+const updateTitleErrorMessage = ref("");
+const editTitleMode = ref(false);
+const titleModel = ref(props.recipe.title);
+const referenceTitleRef: Ref<HTMLInputElement | null> = ref(null);
+
+const isUpdatingReference = ref(false);
+const updateReferenceErrorMessage = ref("");
+const editReferenceMode = ref(false);
+const referenceModel = ref(props.recipe.reference);
+const referenceInputRef: Ref<HTMLInputElement | null> = ref(null);
 
 watch(() => ratingModel.value, updateRating);
 
 function updateRating(newRating: number) {
-  if (updatingInstructionsTimer !== null) {
-    clearTimeout(updatingInstructionsTimer);
-  }
   isUpdatingRating.value = true;
   updateRatingErrorMessage.value = "";
   const formData = JSON.stringify(newRating);
@@ -58,11 +134,70 @@ function updateRating(newRating: number) {
       updateRatingErrorMessage.value = error;
     })
     .finally(() => {
-      updatingInstructionsTimer = setTimeout(
-        () => (isUpdatingRating.value = false),
-        1000
-      );
+      isUpdatingRating.value = false;
     });
+}
+
+function updateTitle() {
+  isUpdatingTitle.value = true;
+  updateTitleErrorMessage.value = "";
+  const formData = JSON.stringify(titleModel.value);
+  const config = {
+    headers: {
+      "content-type": "application/json",
+    },
+  };
+  axios
+    .post("/api/recipe/" + props.recipe.id + "/string/title", formData, config)
+    .catch((error) => {
+      updateTitleErrorMessage.value = error;
+    })
+    .finally(() => {
+      isUpdatingTitle.value = false;
+      editTitleMode.value = false;
+    });
+}
+
+function updateReference() {
+  isUpdatingReference.value = true;
+  updateReferenceErrorMessage.value = "";
+  const formData = JSON.stringify(referenceModel.value);
+  const config = {
+    headers: {
+      "content-type": "application/json",
+    },
+  };
+  axios
+    .post(
+      "/api/recipe/" + props.recipe.id + "/string/reference",
+      formData,
+      config
+    )
+    .catch((error) => {
+      updateReferenceErrorMessage.value = error;
+    })
+    .finally(() => {
+      isUpdatingReference.value = false;
+      editReferenceMode.value = false;
+    });
+}
+
+function editTitleField() {
+  editTitleMode.value = true;
+  nextTick(() => {
+    if (referenceTitleRef.value) {
+      referenceTitleRef.value.focus();
+    }
+  });
+}
+
+function editReferenceField() {
+  editReferenceMode.value = true;
+  nextTick(() => {
+    if (referenceInputRef.value) {
+      referenceInputRef.value.focus();
+    }
+  });
 }
 </script>
 <style scoped lang="scss"></style>
