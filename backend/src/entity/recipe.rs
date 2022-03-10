@@ -10,7 +10,18 @@ pub struct Recipe {
     instructions: String,
     reference: String,
     rating: u8,
+    pub tags: Vec<String>,
     creation_time: DateTime<Utc>,
+}
+
+impl Recipe {
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    pub fn set_tags(&mut self, tags: Vec<String>) {
+        self.tags = tags;
+    }
 }
 
 
@@ -24,6 +35,7 @@ impl TryFrom<&Row<'_>> for Recipe {
             instructions: row.get(2)?,
             reference: row.get(3)?,
             rating: row.get(4)?,
+            tags: Vec::new(),
             creation_time: row.get(5)?,
         })
     }

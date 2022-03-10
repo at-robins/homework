@@ -4,7 +4,7 @@ use actix_files::NamedFile;
 use actix_multipart::Multipart;
 use actix_web::{web, HttpResponse, Responder, Resource, HttpResponseBuilder};
 use futures_util::TryStreamExt as _;
-use rusqlite::params;
+use rusqlite::{params, Connection};
 use uuid::Uuid;
 
 use crate::{application::{config::Configuration, error::HomeworkError}, entity::attachment::Attachment};
@@ -119,4 +119,12 @@ pub async fn download_attachment(id: web::Path<Uuid>) -> Result<NamedFile, Homew
         uuid.to_string()
     };
     Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
+}
+
+pub fn exists_in_database(
+    attachment_id: Uuid,
+    connection: &Connection,
+) -> Result<bool, rusqlite::Error> {
+    let mut stmt = connection.prepare("SELECT 1 FROM attachment WHERE id = ?1")?;
+    stmt.exists([attachment_id])
 }

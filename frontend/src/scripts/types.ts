@@ -10,5 +10,6 @@ export type Recipe = {
   instructions: string;
   reference: string;
   rating: number;
+  tags: Array<string>;
   creation_date: Date;
 };

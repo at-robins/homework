@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use actix_web::{web, HttpResponse, HttpResponseBuilder, Resource, Responder};
 use rusqlite::{params, Connection};
 use uuid::Uuid;
@@ -6,6 +8,8 @@ use crate::{
     application::{config::Configuration, error::HomeworkError},
     entity::recipe::Recipe,
 };
+
+use super::attachment_controller;
 
 const COLUMN_STRING_TITLE: &str = "title";
 const COLUMN_STRING_INSTRUCTIONS: &str = "instructions";
@@ -30,8 +34,27 @@ pub fn recipe_rating_routing() -> Resource {
     web::resource("/api/recipe/{id}/rating").route(web::post().to(change_rating))
 }
 
+pub fn recipe_tags_routing() -> Resource {
+    web::resource("/api/recipe/{id}/tags")
+        .route(web::post().to(add_tag_to_recipe))
+}
+
+pub fn recipe_tag_delete_routing() -> Resource {
+    web::resource("/api/recipe/{id}/tag/{tag_name}").route(web::delete().to(remove_tag_from_recipe))
+}
+
+pub fn recipes_tags_routing() -> Resource {
+    web::resource("/api/recipes/tags")
+        .route(web::get().to(all_recipe_tags))
+}
+
+pub fn recipe_attachments_routing() -> Resource {
+    web::resource("/api/recipe/{id}/attachments")
+        .route(web::post().to(add_attachment_to_recipe))
+}
+
 /// Lists all recipes saved in the database.
-pub async fn all_recipes() -> actix_web::Result<impl Responder> {
+pub async fn all_recipes() -> Result<impl Responder, HomeworkError> {
     let conn = Configuration::database_connection()?;
     let mut stmt = conn
         .prepare("SELECT id, title, instructions, reference, rating, creation_time FROM recipe")
@@ -41,7 +64,9 @@ pub async fn all_recipes() -> actix_web::Result<impl Responder> {
         .map_err(HomeworkError::from)?;
     let mut recipes: Vec<Recipe> = Vec::new();
     for recipe in recipes_sql {
-        recipes.push(recipe.map_err(HomeworkError::from)?);
+        let mut recipe = recipe.map_err(HomeworkError::from)?;
+        recipe.set_tags(tags_for_recipe(recipe.id(), &conn)?);
+        recipes.push(recipe);
     }
     Ok(web::Json(recipes))
 }
@@ -52,14 +77,15 @@ pub async fn single_recipe(id: web::Path<Uuid>) -> Result<impl Responder, Homewo
     if !exists_in_database(uuid, &conn)? {
         return Err(HomeworkError::NotFoundError(Some("The recipe does not exist.".to_string())));
     }
-    let mut stmt = conn
+    let mut stmt_recipe = conn
         .prepare("SELECT id, title, instructions, reference, rating, creation_time FROM recipe WHERE id = ?1")
         .map_err(HomeworkError::from)?;
-    let recipe = stmt
+    let mut recipe = stmt_recipe
         .query_map([uuid], |row| Ok(Recipe::try_from(row)?))
         .map_err(HomeworkError::from)?
         .last()
         .expect("The validity of the query was checked before.")?;
+    recipe.set_tags(tags_for_recipe(uuid, &conn)?);
     Ok(web::Json(recipe))
 }
 
@@ -126,12 +152,102 @@ pub async fn change_rating(
     Ok(HttpResponse::Ok())
 }
 
+pub async fn all_recipe_tags() -> Result<impl Responder, HomeworkError> {
+    let conn = Configuration::database_connection()?;
+    let mut stmt = conn.prepare("SELECT tag FROM tag_recipe_mapping")?;
+    let tag_rows = stmt
+        .query_map([], |row| Ok(row.get(0)?))?;
+    let mut tags: HashSet<String> = HashSet::new();
+    for tag in tag_rows {
+        tags.insert(tag?);
+    }
+    Ok(web::Json(tags))
+}
+
+pub async fn add_tag_to_recipe(
+    tag: web::Json<String>,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponseBuilder, HomeworkError> {
+    let uuid = path.into_inner();
+    let conn = Configuration::database_connection()?;
+
+    if !exists_in_database(uuid, &conn)? {
+        return Err(HomeworkError::NotFoundError(Some("The recipe does not exist.".to_string())));
+    }
+
+    // Add the tag to the database.
+    conn.execute(
+        "INSERT INTO tag_recipe_mapping (tag, recipe_id) VALUES (?1, ?2)",
+        params![tag.into_inner().trim(), uuid],
+    )?;
+
+    Ok(HttpResponse::Created())
+}
+
+pub async fn remove_tag_from_recipe(
+    path: web::Path<(Uuid, String)>,
+) -> Result<HttpResponseBuilder, HomeworkError> {
+    let (uuid, tag_name) = path.into_inner();
+    let conn = Configuration::database_connection()?;
+
+    if !exists_in_database(uuid, &conn)? {
+        return Err(HomeworkError::NotFoundError(Some("The recipe does not exist.".to_string())));
+    }
+
+    // Add the tag to the database.
+    conn.execute(
+        "DELETE FROM tag_recipe_mapping WHERE tag = ?1 AND recipe_id = ?2",
+        params![tag_name.trim(), uuid],
+    )?;
+
+    Ok(HttpResponse::Ok())
+}
+
+pub async fn add_attachment_to_recipe(
+    attachment: web::Json<Uuid>,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponseBuilder, HomeworkError> {
+    let uuid_recipe = path.into_inner();
+    let uuid_attachment = attachment.into_inner();
+    let conn = Configuration::database_connection()?;
+
+    if !exists_in_database(uuid_recipe, &conn)? {
+        return Err(HomeworkError::NotFoundError(Some("The recipe does not exist.".to_string())));
+    }
+
+    if !attachment_controller::exists_in_database(uuid_attachment, &conn)? {
+        return Err(HomeworkError::NotFoundError(Some("The attachment does not exist.".to_string())));
+    }
+
+    // Add the association to the database.
+    conn.execute(
+        "INSERT INTO attachment_recipe_mapping (recipe_id, attachment_id) VALUES (?1, ?2)",
+        params![uuid_recipe, uuid_attachment],
+    )?;
+
+    Ok(HttpResponse::Created())
+}
+
 pub fn exists_in_database(
     recipe_id: Uuid,
     connection: &Connection,
 ) -> Result<bool, rusqlite::Error> {
     let mut stmt = connection.prepare("SELECT 1 FROM recipe WHERE id = ?1")?;
     stmt.exists([recipe_id])
+}
+
+pub fn tags_for_recipe(
+    recipe_id: Uuid,
+    connection: &Connection,
+) -> Result<Vec<String>, rusqlite::Error> {
+    let mut tag_stmt =
+        connection.prepare("SELECT tag FROM tag_recipe_mapping WHERE recipe_id = ?1")?;
+    let tag_rows = tag_stmt.query_map([recipe_id], |row| Ok(row.get(0)?))?;
+    let mut tags = Vec::new();
+    for tag in tag_rows {
+        tags.push(tag?);
+    }
+    Ok(tags)
 }
 
 enum StringColumns {

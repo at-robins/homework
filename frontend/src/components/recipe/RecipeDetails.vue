@@ -9,6 +9,14 @@
 
       <q-separator />
 
+      <q-item>
+        <q-item-section>
+          <recipe-edit-tags :recipe="recipe" />
+        </q-item-section>
+      </q-item>
+
+      <q-separator />
+
       <q-card-section horizontal>
         <q-card-section> abc </q-card-section>
 
@@ -35,6 +43,7 @@ import axios from "axios";
 import { ref, type Ref } from "vue";
 import RecipeEditInstructions from "./RecipeEditInstructions.vue";
 import RecipeEditHeader from "./RecipeEditHeader.vue";
+import RecipeEditTags from "./RecipeEditTags.vue";
 
 const props = defineProps({
   id: { type: String, required: true },

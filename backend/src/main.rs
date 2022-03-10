@@ -4,7 +4,7 @@ use application::{config::Configuration, error::HomeworkError};
 use controller::{
     attachment_controller::{attachment_routing, attachments_routing},
     recipe_controller::{
-        recipe_rating_routing, recipe_routing, recipe_string_routing, recipes_routing,
+        recipe_rating_routing, recipe_routing, recipe_string_routing, recipes_routing, recipe_tags_routing, recipe_tag_delete_routing, recipes_tags_routing, recipe_attachments_routing,
     },
 };
 
@@ -28,6 +28,10 @@ async fn main() -> Result<(), HomeworkError> {
             .service(recipe_routing())
             .service(recipe_string_routing())
             .service(recipe_rating_routing())
+            .service(recipe_tags_routing())
+            .service(recipe_tag_delete_routing())
+            .service(recipes_tags_routing())
+            .service(recipe_attachments_routing())
             // Registers static frontend resources. Needs to be last to not overwrite other routes.
             .service(Files::new("/", "./static_dist").show_files_listing())
     })
