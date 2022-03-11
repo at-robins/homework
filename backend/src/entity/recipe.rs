@@ -3,6 +3,8 @@ use rusqlite::Row;
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
+use super::attachment::Attachment;
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Recipe {
     id: Uuid,
@@ -10,7 +12,8 @@ pub struct Recipe {
     instructions: String,
     reference: String,
     rating: u8,
-    pub tags: Vec<String>,
+    tags: Vec<String>,
+    attachments: Vec<Attachment>,
     creation_time: DateTime<Utc>,
 }
 
@@ -21,6 +24,10 @@ impl Recipe {
 
     pub fn set_tags(&mut self, tags: Vec<String>) {
         self.tags = tags;
+    }
+
+    pub fn set_attachments(&mut self, attachments: Vec<Attachment>) {
+        self.attachments = attachments;
     }
 }
 
@@ -36,6 +43,7 @@ impl TryFrom<&Row<'_>> for Recipe {
             reference: row.get(3)?,
             rating: row.get(4)?,
             tags: Vec::new(),
+            attachments: Vec::new(),
             creation_time: row.get(5)?,
         })
     }

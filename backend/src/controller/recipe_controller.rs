@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     application::{config::Configuration, error::HomeworkError},
-    entity::recipe::Recipe,
+    entity::{recipe::Recipe, attachment::Attachment},
 };
 
 use super::attachment_controller;
@@ -35,8 +35,7 @@ pub fn recipe_rating_routing() -> Resource {
 }
 
 pub fn recipe_tags_routing() -> Resource {
-    web::resource("/api/recipe/{id}/tags")
-        .route(web::post().to(add_tag_to_recipe))
+    web::resource("/api/recipe/{id}/tags").route(web::post().to(add_tag_to_recipe))
 }
 
 pub fn recipe_tag_delete_routing() -> Resource {
@@ -44,13 +43,11 @@ pub fn recipe_tag_delete_routing() -> Resource {
 }
 
 pub fn recipes_tags_routing() -> Resource {
-    web::resource("/api/recipes/tags")
-        .route(web::get().to(all_recipe_tags))
+    web::resource("/api/recipes/tags").route(web::get().to(all_recipe_tags))
 }
 
 pub fn recipe_attachments_routing() -> Resource {
-    web::resource("/api/recipe/{id}/attachments")
-        .route(web::post().to(add_attachment_to_recipe))
+    web::resource("/api/recipe/{id}/attachments").route(web::post().to(add_attachment_to_recipe))
 }
 
 /// Lists all recipes saved in the database.
@@ -66,6 +63,7 @@ pub async fn all_recipes() -> Result<impl Responder, HomeworkError> {
     for recipe in recipes_sql {
         let mut recipe = recipe.map_err(HomeworkError::from)?;
         recipe.set_tags(tags_for_recipe(recipe.id(), &conn)?);
+        recipe.set_attachments(attachments_for_recipe(recipe.id(), &conn)?);
         recipes.push(recipe);
     }
     Ok(web::Json(recipes))
@@ -86,6 +84,7 @@ pub async fn single_recipe(id: web::Path<Uuid>) -> Result<impl Responder, Homewo
         .last()
         .expect("The validity of the query was checked before.")?;
     recipe.set_tags(tags_for_recipe(uuid, &conn)?);
+    recipe.set_attachments(attachments_for_recipe(recipe.id(), &conn)?);
     Ok(web::Json(recipe))
 }
 
@@ -155,8 +154,7 @@ pub async fn change_rating(
 pub async fn all_recipe_tags() -> Result<impl Responder, HomeworkError> {
     let conn = Configuration::database_connection()?;
     let mut stmt = conn.prepare("SELECT tag FROM tag_recipe_mapping")?;
-    let tag_rows = stmt
-        .query_map([], |row| Ok(row.get(0)?))?;
+    let tag_rows = stmt.query_map([], |row| Ok(row.get(0)?))?;
     let mut tags: HashSet<String> = HashSet::new();
     for tag in tag_rows {
         tags.insert(tag?);
@@ -216,7 +214,9 @@ pub async fn add_attachment_to_recipe(
     }
 
     if !attachment_controller::exists_in_database(uuid_attachment, &conn)? {
-        return Err(HomeworkError::NotFoundError(Some("The attachment does not exist.".to_string())));
+        return Err(HomeworkError::NotFoundError(Some(
+            "The attachment does not exist.".to_string(),
+        )));
     }
 
     // Add the association to the database.
@@ -248,6 +248,28 @@ pub fn tags_for_recipe(
         tags.push(tag?);
     }
     Ok(tags)
+}
+
+pub fn attachments_for_recipe(
+    recipe_id: Uuid,
+    connection: &Connection,
+) -> Result<Vec<Attachment>, rusqlite::Error> {
+    let mut attachment_stmt = connection.prepare(
+        "
+            SELECT attachment.id, attachment.name, attachment.creation_time 
+            FROM attachment 
+            INNER JOIN attachment_recipe_mapping 
+                ON attachment.id = attachment_recipe_mapping.attachment_id      
+            WHERE attachment_recipe_mapping.recipe_id = ?1",
+    )?;
+    let attachment_rows =
+        attachment_stmt.query_map([recipe_id], |row| Ok(Attachment::try_from(row)?))?;
+
+    let mut attachments = Vec::new();
+    for attachment in attachment_rows {
+        attachments.push(attachment?);
+    }
+    Ok(attachments)
 }
 
 enum StringColumns {
