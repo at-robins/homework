@@ -81,7 +81,11 @@
 import type { Attachment } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { ref, type Ref } from "vue";
+import { ref, watch, type Ref } from "vue";
+
+const emit = defineEmits<{
+  (event: "updatedAttachments", attachments: Array<Attachment>): void;
+}>();
 
 const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },
@@ -95,8 +99,11 @@ const deletionErrorMessages: Ref<Map<string, string>> = ref(new Map());
 const loadAttachmentsErrorMessage = ref("");
 const uploadErrorMessage = ref("");
 
+watch(attachments, () => {
+  emit("updatedAttachments", attachments.value);
+});
+
 function uploadAttachment(value: File | null) {
-  console.log(value);
   if (value) {
     isUploadingAttachment.value = true;
     uploadErrorMessage.value = "";

@@ -52,7 +52,10 @@
 
       <q-item>
         <q-item-section>
-          <recipe-edit-attachments :recipe="recipe" />
+          <recipe-edit-attachments
+            :recipe="recipe"
+            @updated-attachments="updateAttachments"
+          />
         </q-item-section>
       </q-item>
     </div>
@@ -61,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Recipe } from "@/scripts/types";
+import type { Attachment, Recipe } from "@/scripts/types";
 import axios from "axios";
 import { computed, ref, type Ref } from "vue";
 import RecipeEditInstructions from "./RecipeEditInstructions.vue";
@@ -114,6 +117,12 @@ function loadRecipe() {
     .finally(() => {
       isLoadingRecipe.value = false;
     });
+}
+
+function updateAttachments(newAttachments: Array<Attachment>) {
+  if (recipe.value) {
+    recipe.value.attachments = newAttachments;
+  }
 }
 </script>
 <style scoped lang="scss"></style>
