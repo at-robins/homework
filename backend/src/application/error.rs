@@ -17,7 +17,9 @@ pub enum HomeworkError {
     /// A response error.
     ResponseError(Box<dyn actix_web::error::ResponseError>),
     /// A error representing a missing resource.
-    NotFoundError(Option<String>)
+    NotFoundError(Option<String>),
+    /// A error representing an erroneous request.
+    BadRequestError(Option<String>)
 }
 
 #[derive(Debug, Serialize)]
@@ -42,8 +44,16 @@ impl actix_web::error::ResponseError for HomeworkError {
             HomeworkError::ResponseError(e) => e.error_response(),
             HomeworkError::NotFoundError(optional_message) => {
                 let error_response = ErrorResponse {
-                    code: StatusCode::NOT_FOUND.as_u16(),
+                    code: self.status_code().as_u16(),
                     name: "Not Found".to_string(),
+                    message: optional_message.clone().unwrap_or_default(),
+                };
+                HttpResponse::build(self.status_code()).json(error_response)
+            },
+            HomeworkError::BadRequestError(optional_message) => {
+                let error_response = ErrorResponse {
+                    code: self.status_code().as_u16(),
+                    name: "Bad request".to_string(),
                     message: optional_message.clone().unwrap_or_default(),
                 };
                 HttpResponse::build(self.status_code()).json(error_response)
@@ -58,6 +68,7 @@ impl actix_web::error::ResponseError for HomeworkError {
         match self {
             HomeworkError::ResponseError(e) => e.status_code(),
             HomeworkError::NotFoundError(_) => StatusCode::NOT_FOUND,
+            HomeworkError::BadRequestError(_) => StatusCode::BAD_REQUEST,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

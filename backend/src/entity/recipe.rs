@@ -22,10 +22,6 @@ pub struct Recipe {
 }
 
 impl Recipe {
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
-
     pub fn select_from_database_by_id(
         recipe_id: Uuid,
         connection: &Connection,
@@ -38,7 +34,7 @@ impl Recipe {
         }
         let mut stmt_recipe = connection
             .prepare("SELECT id, title, instructions, reference, rating, creation_time FROM recipe WHERE id = ?1")?;
-        let mut recipe = stmt_recipe
+        let recipe = stmt_recipe
             .query_map([recipe_id], |row| Ok(Recipe::try_from((row, connection))?))?
             .last()
             .expect("The validity of the query was checked before.")?;
@@ -50,7 +46,7 @@ impl Recipe {
         let mut stmt_recipe = connection.prepare(
             "SELECT id, title, instructions, reference, rating, creation_time FROM recipe",
         )?;
-        let mut recipe_query =
+        let recipe_query =
             stmt_recipe.query_map([], |row| Ok(Recipe::try_from((row, connection))?))?;
         let mut recipes = Vec::new();
         for recipe in recipe_query {
@@ -235,10 +231,6 @@ impl Recipe {
             ingredients.push(ingredient?);
         }
         Ok(ingredients)
-    }
-
-    pub fn exists_in_database(&self, connection: &Connection) -> Result<bool, rusqlite::Error> {
-        Recipe::exists_in_database_by_id(self.id(), connection)
     }
 
     pub fn exists_in_database_by_id(

@@ -15,13 +15,6 @@ impl Attachment {
         &self.name
     }
 
-    pub fn exists_in_database(
-        &self,
-        connection: &Connection,
-    ) -> Result<bool, rusqlite::Error> {
-        Attachment::exists_in_database_by_id(self.id, connection)
-    }
-
     pub fn exists_in_database_by_id(
         id: Uuid,
         connection: &Connection,

@@ -1,50 +1,12 @@
 use std::collections::HashSet;
 
-use actix_web::{web, HttpResponse, HttpResponseBuilder, Resource, Responder};
-use rusqlite::params;
+use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder};
 use uuid::Uuid;
 
 use crate::{
     application::{config::Configuration, error::HomeworkError},
     entity::{ingredient::Ingredient, recipe::Recipe},
 };
-
-use super::attachment_controller;
-
-pub fn recipes_routing() -> Resource {
-    web::resource("/api/recipes")
-        .route(web::get().to(all_recipes))
-        .route(web::post().to(create_recipe))
-}
-
-pub fn recipe_routing() -> Resource {
-    web::resource("/api/recipe/{id}").route(web::get().to(single_recipe))
-}
-
-pub fn recipe_string_routing() -> Resource {
-    web::resource("/api/recipe/{id}/string/{string_param}")
-        .route(web::post().to(change_recipe_string_column))
-}
-
-pub fn recipe_rating_routing() -> Resource {
-    web::resource("/api/recipe/{id}/rating").route(web::post().to(change_rating))
-}
-
-pub fn recipe_tags_routing() -> Resource {
-    web::resource("/api/recipe/{id}/tags").route(web::post().to(add_tag_to_recipe))
-}
-
-pub fn recipe_tag_delete_routing() -> Resource {
-    web::resource("/api/recipe/{id}/tag/{tag_name}").route(web::delete().to(remove_tag_from_recipe))
-}
-
-pub fn recipes_tags_routing() -> Resource {
-    web::resource("/api/recipes/tags").route(web::get().to(all_recipe_tags))
-}
-
-pub fn recipe_attachments_routing() -> Resource {
-    web::resource("/api/recipe/{id}/attachments").route(web::post().to(add_attachment_to_recipe))
-}
 
 /// Lists all recipes saved in the database.
 pub async fn all_recipes() -> Result<impl Responder, HomeworkError> {
@@ -63,7 +25,7 @@ pub async fn create_recipe(title: web::Json<String>) -> Result<HttpResponse, Hom
     let title = title.into_inner();
     // Generate a new UUID for the recipe.
     let uuid = Configuration::generate_uuid();
-    Recipe::insert_into_database_new_entry(uuid, &title, &conn);
+    Recipe::insert_into_database_new_entry(uuid, &title, &conn)?;
     // Return the UUID of the created recipe.
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
@@ -140,6 +102,7 @@ pub async fn add_ingredient_to_recipe(
     // Overwrite the UUID.
     let uuid_ingredient = Configuration::generate_uuid();
     ingredient.set_id(uuid_ingredient);
+    ingredient.set_recipe_id(uuid_recipe);
     let conn = Configuration::database_connection()?;
     ingredient.insert_into_database(&conn)?;
     Ok(HttpResponse::Created().body(uuid_ingredient.to_string()))
@@ -151,6 +114,13 @@ pub async fn modify_ingredient(
 ) -> Result<HttpResponseBuilder, HomeworkError> {
     let uuid_recipe = path.into_inner();
     let ingredient = ingredient.into_inner();
+    if uuid_recipe != ingredient.recipe_id() {
+        return Err(HomeworkError::BadRequestError(Some(format!(
+            "The requested recipe {} does not match the recipe referenced by the ingredient {}.",
+            uuid_recipe,
+            ingredient.recipe_id()
+        ))));
+    }
     let conn = Configuration::database_connection()?;
     ingredient.update_in_database(&conn)?;
     Ok(HttpResponse::Ok())

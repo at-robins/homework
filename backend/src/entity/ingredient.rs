@@ -48,16 +48,20 @@ impl Ingredient {
         self.id = id;
     }
 
+    pub fn set_recipe_id(&mut self, recipe_id: Uuid) {
+        self.recipe_id = recipe_id;
+    }
+
     pub fn exists_in_database(&self, connection: &Connection) -> Result<bool, rusqlite::Error> {
         Ingredient::exists_in_database_by_id(self.id(), connection)
     }
 
     pub fn insert_into_database(&self, connection: &Connection) -> Result<(), HomeworkError> {
         if self.exists_in_database(connection)? {
-            return Err(HomeworkError::GenericError(format!(
+            return Err(HomeworkError::BadRequestError(Some(format!(
                 "The ingredient {} already exists.",
                 self.id()
-            )));
+            ))));
         }
 
         if !Recipe::exists_in_database_by_id(self.recipe_id(), connection)? {

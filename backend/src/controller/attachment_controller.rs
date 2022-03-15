@@ -1,21 +1,16 @@
-use std::{io::Write, path::Path, sync::Arc, fs::File};
+use std::{fs::File, io::Write, path::Path, sync::Arc};
 
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
-use actix_web::{web, HttpResponse, Responder, Resource, HttpResponseBuilder};
+use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder};
 use futures_util::TryStreamExt as _;
-use rusqlite::{params, Connection};
+use rusqlite::params;
 use uuid::Uuid;
 
-use crate::{application::{config::Configuration, error::HomeworkError}, entity::attachment::Attachment};
-
-pub fn attachments_routing() -> Resource {
-    web::resource("/api/attachments").route(web::get().to(all_attachments)).route(web::post().to(add_attachment))
-}
-
-pub fn attachment_routing() -> Resource {
-    web::resource("/api/attachment/{id}").route(web::get().to(download_attachment)).route(web::delete().to(delete_attachment))
-}
+use crate::{
+    application::{config::Configuration, error::HomeworkError},
+    entity::attachment::Attachment,
+};
 
 /// Lists all attachments saved in the database.
 pub async fn all_attachments() -> actix_web::Result<impl Responder> {
@@ -88,12 +83,7 @@ pub async fn delete_attachment(id: web::Path<Uuid>) -> Result<HttpResponseBuilde
     std::fs::remove_file(file_path)?;
 
     // Remove the attachment from the database.
-    conn.execute(
-        "DELETE FROM attachment WHERE id = ?1",
-        params![
-            uuid,
-        ],
-    )?;
+    conn.execute("DELETE FROM attachment WHERE id = ?1", params![uuid,])?;
 
     // Return the UUID of the created attachment.
     Ok(HttpResponse::Ok())
@@ -109,22 +99,14 @@ pub async fn download_attachment(id: web::Path<Uuid>) -> Result<NamedFile, Homew
         .prepare("SELECT id, name, creation_time FROM attachment WHERE id = ?1")
         .map_err(HomeworkError::from)?;
     let attachment_option = stmt
-        .query_map(params![
-            uuid,
-        ], |row| Ok(Attachment::try_from(row)?))
-        .map_err(HomeworkError::from)?.take(1).last();
+        .query_map(params![uuid,], |row| Ok(Attachment::try_from(row)?))
+        .map_err(HomeworkError::from)?
+        .take(1)
+        .last();
     let file_name = if attachment_option.is_some() {
         attachment_option.unwrap()?.name().to_string()
     } else {
         uuid.to_string()
     };
     Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
-}
-
-pub fn exists_in_database(
-    attachment_id: Uuid,
-    connection: &Connection,
-) -> Result<bool, rusqlite::Error> {
-    let mut stmt = connection.prepare("SELECT 1 FROM attachment WHERE id = ?1")?;
-    stmt.exists([attachment_id])
 }
