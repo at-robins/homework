@@ -27,7 +27,7 @@
 
           <q-item-section top>
             <q-item-label class="q-mt-sm"
-              ><a :href="'/api/attachment/' + attachment.id">{{
+              ><a :href="'/ui/recipe/' + attachment.id">{{
                 attachment.title
               }}</a></q-item-label
             >

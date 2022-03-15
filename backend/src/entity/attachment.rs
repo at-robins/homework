@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use rusqlite::Row;
-use serde::{Serialize, Deserialize};
+use rusqlite::{Row, Connection};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -13,6 +13,21 @@ pub struct Attachment {
 impl Attachment {
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn exists_in_database(
+        &self,
+        connection: &Connection,
+    ) -> Result<bool, rusqlite::Error> {
+        Attachment::exists_in_database_by_id(self.id, connection)
+    }
+
+    pub fn exists_in_database_by_id(
+        id: Uuid,
+        connection: &Connection,
+    ) -> Result<bool, rusqlite::Error> {
+        let mut stmt = connection.prepare("SELECT 1 FROM attachment WHERE id = ?1")?;
+        stmt.exists([id])
     }
 }
 

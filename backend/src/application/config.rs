@@ -98,6 +98,10 @@ impl Configuration {
                     text                            TEXT NOT NULL,
                     creation_time                   TEXT NOT NULL,
                     recipe_reference                BLOB,
+                    recipe_id                       BLOB NOT NULL,
+                    FOREIGN KEY (recipe_id) REFERENCES recipe (id) 
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE,
                     FOREIGN KEY (recipe_reference)  REFERENCES recipe (id) 
                         ON UPDATE CASCADE
                         ON DELETE CASCADE
@@ -113,20 +117,6 @@ impl Configuration {
                         ON UPDATE CASCADE
                         ON DELETE CASCADE,
                     FOREIGN KEY (attachment_id) REFERENCES attachment (id) 
-                        ON UPDATE CASCADE
-                        ON DELETE CASCADE
-                      )",
-            [],
-        )?;
-        connection.execute(
-            "CREATE TABLE IF NOT EXISTS ingredient_recipe_mapping (
-                    id                          INTEGER PRIMARY KEY,
-                    recipe_id                   BLOB NOT NULL,
-                    ingredient_id               BLOB NOT NULL,
-                    FOREIGN KEY (recipe_id)     REFERENCES recipe (id) 
-                        ON UPDATE CASCADE
-                        ON DELETE CASCADE,
-                    FOREIGN KEY (ingredient_id) REFERENCES ingredient (id) 
                         ON UPDATE CASCADE
                         ON DELETE CASCADE
                       )",
