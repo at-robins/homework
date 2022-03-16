@@ -1,7 +1,7 @@
 export type Attachment = {
   id: string;
   name: string;
-  creation_date: Date;
+  creationTime: Date;
 };
 
 export type Recipe = {
@@ -13,7 +13,7 @@ export type Recipe = {
   tags: Array<string>;
   attachments: Array<Attachment>;
   ingredients: Array<Ingredient>;
-  creation_date: Date;
+  creationTime: Date;
 };
 
 export type Ingredient = {
@@ -22,4 +22,6 @@ export type Ingredient = {
   unit: string;
   text: string;
   recipeReference: string | null | undefined;
+  recipeId: string;
+  creationTime: Date;
 };

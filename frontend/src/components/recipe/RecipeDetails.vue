@@ -37,8 +37,11 @@
 
         <q-separator vertical />
 
-        <q-card-section class="col-4">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        <q-card-section class="col-grow">
+          <recipe-edit-ingredients
+            :recipe="recipe"
+            @updated-ingredients="updateIngredients"
+          />
         </q-card-section>
       </q-card-section>
 
@@ -64,13 +67,14 @@
 </template>
 
 <script setup lang="ts">
-import type { Attachment, Recipe } from "@/scripts/types";
+import type { Attachment, Ingredient, Recipe } from "@/scripts/types";
 import axios from "axios";
 import { computed, ref, type Ref } from "vue";
 import RecipeEditInstructions from "./RecipeEditInstructions.vue";
 import RecipeEditHeader from "./RecipeEditHeader.vue";
 import RecipeEditTags from "./RecipeEditTags.vue";
 import RecipeEditAttachments from "./RecipeEditAttachments.vue";
+import RecipeEditIngredients from "./RecipeEditIngredients.vue";
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -122,6 +126,12 @@ function loadRecipe() {
 function updateAttachments(newAttachments: Array<Attachment>) {
   if (recipe.value) {
     recipe.value.attachments = newAttachments;
+  }
+}
+
+function updateIngredients(newIngredients: Array<Ingredient>) {
+  if (recipe.value) {
+    recipe.value.ingredients = newIngredients;
   }
 }
 </script>

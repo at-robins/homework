@@ -7,7 +7,7 @@ use super::{
     },
     recipe_controller::{
         add_attachment_to_recipe, add_tag_to_recipe, all_recipe_tags, all_recipes, change_rating,
-        change_recipe_string_column, create_recipe, remove_tag_from_recipe, single_recipe, modify_ingredient, add_ingredient_to_recipe,
+        change_recipe_string_column, create_recipe, remove_tag_from_recipe, single_recipe, modify_ingredient, add_ingredient_to_recipe, remove_ingredient_from_recipe,
     },
 };
 
@@ -54,6 +54,8 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
         .route(web::post().to(add_ingredient_to_recipe))
         .route(web::patch().to(modify_ingredient))
     )
+    .route("/api/recipe/{recipe_id}/ingredient/{ingredient_id}", web::delete().to(remove_ingredient_from_recipe))
+
     // Registers static frontend resources. Needs to be last to not overwrite other routes.
     .service(Files::new("/", "./static_dist").show_files_listing());
 }

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{web, HttpResponse, Responder};
 use uuid::Uuid;
 
 use crate::{
@@ -33,22 +33,22 @@ pub async fn create_recipe(title: web::Json<String>) -> Result<HttpResponse, Hom
 pub async fn change_recipe_string_column(
     value: web::Json<String>,
     path: web::Path<(Uuid, String)>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let (uuid, column) = path.into_inner();
     let value = value.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_string_column(uuid, &column, &value, &conn)?;
-    Ok(HttpResponse::Ok())
+    Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn change_rating(
     rating: web::Json<u8>,
     id: web::Path<Uuid>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let uuid = id.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_rating(uuid, rating.into_inner(), &conn)?;
-    Ok(HttpResponse::Ok())
+    Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn all_recipe_tags() -> Result<impl Responder, HomeworkError> {
@@ -65,32 +65,32 @@ pub async fn all_recipe_tags() -> Result<impl Responder, HomeworkError> {
 pub async fn add_tag_to_recipe(
     tag: web::Json<String>,
     path: web::Path<Uuid>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let uuid = path.into_inner();
     let conn = Configuration::database_connection()?;
     let tag = tag.into_inner();
     Recipe::update_in_database_insert_tag(uuid, &tag, &conn)?;
-    Ok(HttpResponse::Created())
+    Ok(HttpResponse::Created().finish())
 }
 
 pub async fn remove_tag_from_recipe(
     path: web::Path<(Uuid, String)>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let (uuid, tag_name) = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_delete_tag(uuid, &tag_name, &conn)?;
-    Ok(HttpResponse::Ok())
+    Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn add_attachment_to_recipe(
     attachment: web::Json<Uuid>,
     path: web::Path<Uuid>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let uuid_recipe = path.into_inner();
     let uuid_attachment = attachment.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_insert_attachment(uuid_recipe, uuid_attachment, &conn)?;
-    Ok(HttpResponse::Created())
+    Ok(HttpResponse::Created().finish())
 }
 
 pub async fn add_ingredient_to_recipe(
@@ -111,7 +111,7 @@ pub async fn add_ingredient_to_recipe(
 pub async fn modify_ingredient(
     ingredient: web::Json<Ingredient>,
     path: web::Path<Uuid>,
-) -> Result<HttpResponseBuilder, HomeworkError> {
+) -> Result<HttpResponse, HomeworkError> {
     let uuid_recipe = path.into_inner();
     let ingredient = ingredient.into_inner();
     if uuid_recipe != ingredient.recipe_id() {
@@ -123,5 +123,14 @@ pub async fn modify_ingredient(
     }
     let conn = Configuration::database_connection()?;
     ingredient.update_in_database(&conn)?;
-    Ok(HttpResponse::Ok())
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub async fn remove_ingredient_from_recipe(
+    path: web::Path<(Uuid, Uuid)>,
+) -> Result<HttpResponse, HomeworkError> {
+    let (_, uuid_ingredient) = path.into_inner();
+    let conn = Configuration::database_connection()?;
+    Ingredient::delete_from_database_by_id(uuid_ingredient, &conn)?;
+    Ok(HttpResponse::Ok().finish())
 }

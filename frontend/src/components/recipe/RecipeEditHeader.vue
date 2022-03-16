@@ -75,7 +75,7 @@
       v-model="ratingModel"
       max="10"
       size="3em"
-      :color="!updateRatingErrorMessage ? 'yellow' : 'negative'"
+      :color="!updateRatingErrorMessage ? 'primary' : 'negative'"
       icon="star_border"
       icon-selected="star"
       :disable="!!updateRatingErrorMessage || isUpdatingRating"

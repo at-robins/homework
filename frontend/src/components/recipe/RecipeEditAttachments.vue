@@ -135,7 +135,7 @@ function uploadAttachment(value: File | null) {
         attachments.value.push({
           id: generatedAttachmentId,
           name: value.name,
-          creation_date: new Date(),
+          creationTime: new Date(),
         });
       })
       .catch((error) => {

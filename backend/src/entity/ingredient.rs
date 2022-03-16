@@ -56,6 +56,26 @@ impl Ingredient {
         Ingredient::exists_in_database_by_id(self.id(), connection)
     }
 
+    pub fn select_from_database_by_recipe_id(
+        recipe_id: Uuid,
+        connection: &Connection,
+    ) -> Result<Vec<Ingredient>, rusqlite::Error> {
+        let mut ingredient_stmt = connection.prepare(
+            "
+                SELECT id, amount, unit, text, creation_time, recipe_reference, recipe_id
+                FROM ingredient
+                WHERE recipe_id = ?1",
+        )?;
+        let ingredient_rows =
+            ingredient_stmt.query_map([recipe_id], |row| Ok(Ingredient::try_from(row)?))?;
+
+        let mut ingredients = Vec::new();
+        for ingredient in ingredient_rows {
+            ingredients.push(ingredient?);
+        }
+        Ok(ingredients)
+    }
+
     pub fn insert_into_database(&self, connection: &Connection) -> Result<(), HomeworkError> {
         if self.exists_in_database(connection)? {
             return Err(HomeworkError::BadRequestError(Some(format!(
@@ -101,6 +121,24 @@ impl Ingredient {
             params![self.amount(), self.unit(), self.text(), self.recipe_reference(), self.id()],
         )?;
 
+        Ok(())
+    }
+
+    pub fn delete_from_database_by_id(
+        id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        if !Ingredient::exists_in_database_by_id(id, connection)? {
+            return Err(HomeworkError::NotFoundError(Some(format!(
+                "The recipe {} does not exist.",
+                id
+            ))));
+        }
+
+        connection.execute(
+            "DELETE FROM ingredient WHERE id = ?1",
+            params![id],
+        )?;
         Ok(())
     }
 

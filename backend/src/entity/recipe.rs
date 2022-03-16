@@ -211,28 +211,6 @@ impl Recipe {
         Ok(attachments)
     }
 
-    pub fn ingredients_by_id(
-        recipe_id: Uuid,
-        connection: &Connection,
-    ) -> Result<Vec<Ingredient>, rusqlite::Error> {
-        let mut ingredient_stmt = connection.prepare(
-            "
-                SELECT ingredient.id, ingredient.amount, ingredient.unit, ingredient.recipe_reference, ingredient.creation_time 
-                FROM ingredient 
-                INNER JOIN ingredient_recipe_mapping 
-                    ON ingredient.id = ingredient_recipe_mapping.ingredient_id      
-                WHERE ingredient_recipe_mapping.recipe_id = ?1",
-        )?;
-        let ingredient_rows =
-            ingredient_stmt.query_map([recipe_id], |row| Ok(Ingredient::try_from(row)?))?;
-
-        let mut ingredients = Vec::new();
-        for ingredient in ingredient_rows {
-            ingredients.push(ingredient?);
-        }
-        Ok(ingredients)
-    }
-
     pub fn exists_in_database_by_id(
         recipe_id: Uuid,
         connection: &Connection,
@@ -256,7 +234,7 @@ impl TryFrom<(&Row<'_>, &Connection)> for Recipe {
             rating: row.get(4)?,
             tags: Recipe::tags_by_id(id, connection)?,
             attachments: Recipe::attachments_by_id(id, connection)?,
-            ingredients: Recipe::ingredients_by_id(id, connection)?,
+            ingredients: Ingredient::select_from_database_by_recipe_id(id, connection)?,
             creation_time: row.get(5)?,
         })
     }
