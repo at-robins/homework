@@ -37,7 +37,7 @@
 
         <q-separator vertical />
 
-        <q-card-section class="col-grow">
+        <q-card-section class="col-8">
           <recipe-edit-ingredients
             :recipe="recipe"
             @updated-ingredients="updateIngredients"

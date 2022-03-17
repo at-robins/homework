@@ -8,19 +8,24 @@
       >
         <recipe-edit-ingredient
           :ingredient="ingredient"
+          :available-recipe-references="availableRecipeReferences"
           @added-ingredient="addIngredient"
           @updated-ingredient="updateIngredient"
           @removed-ingredient="removeIngredient"
         />
-        <q-separator spaced v-if="index + 1 < ingredients.length" />
+        <q-separator
+          spaced
+          v-if="index + 1 < ingredientsWithEmptyEntity.length"
+        />
       </div>
     </q-list>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Ingredient } from "@/scripts/types";
+import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
+import axios from "axios";
 import { computed, ref, watch, type Ref } from "vue";
 import RecipeEditIngredient from "./RecipeEditIngredient.vue";
 
@@ -33,6 +38,10 @@ const props = defineProps({
 });
 
 const ingredients: Ref<Array<Ingredient>> = ref(props.recipe.ingredients);
+const availableRecipeReferences: Ref<RecipeReferences> = ref({
+  error: "",
+  references: [],
+});
 
 const ingredientsWithEmptyEntity = computed(() => {
   let withEmptyEntity = [...ingredients.value];
@@ -49,9 +58,14 @@ const ingredientsWithEmptyEntity = computed(() => {
   return withEmptyEntity;
 });
 
-watch(props.recipe, (newValue) => {
-  ingredients.value = newValue.ingredients;
-});
+loadRecipeReferences();
+
+watch(
+  () => props.recipe,
+  (newValue) => {
+    ingredients.value = newValue.ingredients;
+  }
+);
 
 function addIngredient(ingredient: Ingredient) {
   ingredients.value.push(ingredient);
@@ -74,6 +88,25 @@ function removeIngredient(ingredientId: string) {
     (ingredient) => ingredient.id !== ingredientId
   );
   emit("updatedIngredients", ingredients.value);
+}
+
+function loadRecipeReferences() {
+  axios
+    .get("/api/recipes")
+    .then((response) => {
+      availableRecipeReferences.value = {
+        error: "",
+        references: response.data.map((recipe: Recipe) => {
+          return { label: recipe.title, value: recipe.id };
+        }),
+      };
+    })
+    .catch((error) => {
+      availableRecipeReferences.value = {
+        error: error,
+        references: [],
+      };
+    });
 }
 </script>
 <style scoped lang="scss"></style>

@@ -25,3 +25,8 @@ export type Ingredient = {
   recipeId: string;
   creationTime: Date;
 };
+
+export type RecipeReferences = {
+  error: string | null;
+  references: Array<{ label: string; value: string }>;
+};

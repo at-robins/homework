@@ -102,9 +102,9 @@ impl Configuration {
                     FOREIGN KEY (recipe_id) REFERENCES recipe (id) 
                         ON UPDATE CASCADE
                         ON DELETE CASCADE,
-                    FOREIGN KEY (recipe_reference)  REFERENCES recipe (id) 
+                    FOREIGN KEY (recipe_reference) REFERENCES recipe (id) 
                         ON UPDATE CASCADE
-                        ON DELETE CASCADE
+                        ON DELETE SET NULL
                       )",
             [],
         )?;

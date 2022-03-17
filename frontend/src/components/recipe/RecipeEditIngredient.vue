@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-md q-gutter-md">
     <q-item class="row">
-      <q-item-section top class="col-2">
+      <q-item-section top class="col-1">
         <q-item-label
           v-if="ingredient.id && !editMode"
           class="q-mt-sm text-right"
@@ -9,6 +9,7 @@
         >
         <q-input
           v-else
+          ref="amountInputRef"
           v-model="amountModel"
           input-class="text-right"
           @keydown.enter="addOrUpdateIngredient"
@@ -27,17 +28,47 @@
       </q-item-section>
 
       <q-item-section top class="col-8">
-        <q-item-label v-if="ingredient.id && !editMode" class="q-mt-sm"
-          ><b>{{ ingredient.text }}</b></q-item-label
-        >
+        <q-item-label v-if="ingredient.id && !editMode" class="q-mt-sm">
+          <a
+            v-if="ingredient.recipeReference"
+            :href="'/ui/recipe/' + ingredient.recipeReference"
+          >
+            {{ ingredient.text }}
+          </a>
+          <div v-else>
+            {{ ingredient.text }}
+          </div>
+        </q-item-label>
         <q-input
-          v-else
+          v-else-if="!showRecipeReferencesMode"
           v-model="textModel"
           @keydown.enter="addOrUpdateIngredient"
         ></q-input>
+        <q-select
+          v-else
+          v-model="recipeReferenceModel"
+          label="Rezeptreferenz"
+          :options="availableRecipeReferences.references"
+          emit-value
+          map-options
+          @keydown.enter="selectedRecipeReference"
+          @update:model-value="selectedRecipeReference"
+        >
+          <template v-slot:append>
+            <q-icon
+              v-if="recipeReferenceModel"
+              class="cursor-pointer"
+              name="clear"
+              @click.stop="
+                recipeReferenceModel = null;
+                showRecipeReferencesMode = false;
+              "
+            />
+          </template>
+        </q-select>
       </q-item-section>
 
-      <q-item-section top side class="col-1">
+      <q-item-section top side class="col-2">
         <div class="text-grey-8 q-gutter-xs">
           <q-btn
             v-if="ingredient.id && !editMode"
@@ -78,7 +109,27 @@
             </q-tooltip>
           </q-btn>
           <q-btn
-            v-if="props.ingredient.id"
+            v-if="!ingredient.id || editMode"
+            class="gt-xs"
+            size="12px"
+            flat
+            dense
+            round
+            icon="attachment"
+            :color="!availableRecipeReferences.error ? 'grey' : 'negative'"
+            @click="showRecipeReferencesMode = !showRecipeReferencesMode"
+          >
+            <q-tooltip>
+              <div v-if="!availableRecipeReferences.error">
+                Rezept verknüpfen
+              </div>
+              <div v-else>
+                {{ availableRecipeReferences.error }}
+              </div>
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="props.ingredient.id && !editMode"
             class="gt-xs"
             size="12px"
             flat
@@ -103,9 +154,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Ingredient } from "@/scripts/types";
+import type { Ingredient, RecipeReferences } from "@/scripts/types";
+import { equality_shallow_object } from "@/scripts/utilities";
 import axios from "axios";
-import { ref, watch } from "vue";
+import { ref, watch, type Ref } from "vue";
 
 const emit = defineEmits<{
   (event: "addedIngredient", ingredient: Ingredient): void;
@@ -115,6 +167,13 @@ const emit = defineEmits<{
 
 const props = defineProps({
   ingredient: { type: Object as () => Ingredient, required: true },
+  availableRecipeReferences: {
+    type: Object as () => RecipeReferences,
+    required: false,
+    default: () => {
+      return { error: "", references: [] };
+    },
+  },
 });
 
 const isCreatingOrUpdatingIngredient = ref(false);
@@ -126,13 +185,18 @@ const unitModel = ref(props.ingredient.unit);
 const textModel = ref(props.ingredient.text);
 const recipeReferenceModel = ref(props.ingredient.recipeReference);
 const editMode = ref(false);
+const showRecipeReferencesMode = ref(false);
+const amountInputRef: Ref<HTMLInputElement | null> = ref(null);
 
-watch(props.ingredient, (newValue) => {
-  amountModel.value = newValue.amount;
-  unitModel.value = newValue.unit;
-  textModel.value = newValue.text;
-  recipeReferenceModel.value = newValue.recipeReference;
-});
+watch(
+  () => props.ingredient,
+  (newValue) => {
+    amountModel.value = newValue.amount;
+    unitModel.value = newValue.unit;
+    textModel.value = newValue.text;
+    recipeReferenceModel.value = newValue.recipeReference;
+  }
+);
 
 function addOrUpdateIngredient() {
   if (props.ingredient.id) {
@@ -176,6 +240,9 @@ function addIngredient() {
         unitModel.value = props.ingredient.unit;
         textModel.value = props.ingredient.text;
         recipeReferenceModel.value = props.ingredient.recipeReference;
+        if (amountInputRef.value) {
+          amountInputRef.value.focus();
+        }
       })
       .catch((error) => {
         creationOrUpdateErrorMessage.value = error;
@@ -183,14 +250,13 @@ function addIngredient() {
       .finally(() => {
         isCreatingOrUpdatingIngredient.value = false;
         editMode.value = false;
+        showRecipeReferencesMode.value = false;
       });
   }
 }
 
 function updateIngredient() {
   if (!isCreatingOrUpdatingIngredient.value && props.ingredient.id) {
-    isCreatingOrUpdatingIngredient.value = true;
-    creationOrUpdateErrorMessage.value = "";
     let updatedIngredient: Ingredient = {
       id: props.ingredient.id,
       amount: amountModel.value,
@@ -200,28 +266,37 @@ function updateIngredient() {
       recipeId: props.ingredient.recipeId,
       creationTime: props.ingredient.creationTime,
     };
-    const formData = JSON.stringify(updatedIngredient);
-    const config = {
-      headers: {
-        "content-type": "application/json",
-      },
-    };
-    axios
-      .patch(
-        "/api/recipe/" + props.ingredient.recipeId + "/ingredients",
-        formData,
-        config
-      )
-      .then(() => {
-        emit("updatedIngredient", updatedIngredient);
-      })
-      .catch((error) => {
-        creationOrUpdateErrorMessage.value = error;
-      })
-      .finally(() => {
-        isCreatingOrUpdatingIngredient.value = false;
-        editMode.value = false;
-      });
+    // Only update if there are changes.
+    if (!equality_shallow_object(updatedIngredient, props.ingredient)) {
+      isCreatingOrUpdatingIngredient.value = true;
+      creationOrUpdateErrorMessage.value = "";
+      const formData = JSON.stringify(updatedIngredient);
+      const config = {
+        headers: {
+          "content-type": "application/json",
+        },
+      };
+      axios
+        .patch(
+          "/api/recipe/" + props.ingredient.recipeId + "/ingredients",
+          formData,
+          config
+        )
+        .then(() => {
+          emit("updatedIngredient", updatedIngredient);
+        })
+        .catch((error) => {
+          creationOrUpdateErrorMessage.value = error;
+        })
+        .finally(() => {
+          isCreatingOrUpdatingIngredient.value = false;
+          editMode.value = false;
+          showRecipeReferencesMode.value = false;
+        });
+    } else {
+      editMode.value = false;
+      showRecipeReferencesMode.value = false;
+    }
   }
 }
 
@@ -246,6 +321,18 @@ function deleteIngredient() {
       .finally(() => {
         isDeltingIngredient.value = false;
       });
+  }
+}
+
+function selectedRecipeReference() {
+  showRecipeReferencesMode.value = false;
+  if (!textModel.value) {
+    const mapping = props.availableRecipeReferences.references.find(
+      (recipeRef) => recipeRef.value === recipeReferenceModel.value
+    );
+    if (mapping) {
+      textModel.value = mapping.label;
+    }
   }
 }
 </script>
