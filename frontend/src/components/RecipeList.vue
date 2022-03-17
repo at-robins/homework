@@ -1,21 +1,5 @@
 <template>
   <div class="q-pa-md q-gutter-md">
-    <q-file
-      color="teal"
-      filled
-      v-model="model"
-      label="Anhang hochladen"
-      :loading="isUploadingAttachment"
-      :readonly="isUploadingAttachment"
-      :error="!!uploadErrorMessage"
-      :error-message="uploadErrorMessage"
-      max-files="1"
-      @update:model-value="uploadAttachment"
-    >
-      <template v-slot:prepend>
-        <q-icon name="cloud_upload" />
-      </template>
-    </q-file>
     <q-list bordered class="rounded-borders" style="max-width: 600px">
       <q-item-label header>Anhänge</q-item-label>
 
@@ -26,10 +10,10 @@
           </q-item-section>
 
           <q-item-section top>
-            <q-item-label class="q-mt-sm"
-              ><a :href="'/ui/recipe/' + attachment.id">{{
+            <q-item-label class="q-mt-sm">
+              <router-link :to="'/ui/recipe/' + attachment.id">{{
                 attachment.title
-              }}</a></q-item-label
+              }}</router-link></q-item-label
             >
           </q-item-section>
 

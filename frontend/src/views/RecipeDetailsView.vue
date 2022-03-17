@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Toolbar from "@/components/Toolbar.vue";
 import RecipeDetails from "../components/recipe/RecipeDetails.vue";
 defineProps({
   id: {
@@ -10,9 +9,6 @@ defineProps({
 </script>
 
 <template>
-  <header>
-    <Toolbar />
-  </header>
   <main>
     <RecipeDetails :id="id" class="q-ma-md" />
   </main>

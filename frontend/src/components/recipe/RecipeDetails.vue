@@ -17,7 +17,7 @@
 
       <q-separator />
 
-      <q-card-section horizontal>
+      <q-card-section horizontal class="row">
         <q-card-section class="col-4">
           <q-carousel
             v-model="imageSlideModel"
@@ -47,7 +47,7 @@
 
       <q-separator />
 
-      <q-card-section horizontal>
+      <q-card-section horizontal class="row" style="height: auto">
         <recipe-edit-instructions :id="id" v-model="editorModel" />
       </q-card-section>
 
@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import type { Attachment, Ingredient, Recipe } from "@/scripts/types";
 import axios from "axios";
-import { computed, ref, type Ref } from "vue";
+import { computed, onMounted, ref, type Ref } from "vue";
 import RecipeEditInstructions from "./RecipeEditInstructions.vue";
 import RecipeEditHeader from "./RecipeEditHeader.vue";
 import RecipeEditTags from "./RecipeEditTags.vue";
@@ -87,7 +87,9 @@ const ratingModel = ref(0);
 const editorModel = ref("");
 const imageSlideModel = ref(0);
 
-loadRecipe();
+onMounted(() => {
+  loadRecipe();
+});
 
 const imageAttachments = computed(() => {
   if (!recipe.value) {

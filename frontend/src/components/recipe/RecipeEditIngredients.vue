@@ -1,6 +1,6 @@
 <template>
-  <div class="q-pa-md q-gutter-md">
-    <q-list bordered class="rounded-borders">
+  <div class="q-pa-xs q-gutter-xs">
+    <q-list class="rounded-borders">
       <q-item-label header>Zutaten</q-item-label>
       <div
         v-for="(ingredient, index) in ingredientsWithEmptyEntity"
@@ -26,7 +26,7 @@
 import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { computed, ref, watch, type Ref } from "vue";
+import { computed, onMounted, ref, watch, type Ref } from "vue";
 import RecipeEditIngredient from "./RecipeEditIngredient.vue";
 
 const emit = defineEmits<{
@@ -58,7 +58,9 @@ const ingredientsWithEmptyEntity = computed(() => {
   return withEmptyEntity;
 });
 
-loadRecipeReferences();
+onMounted(() => {
+  loadRecipeReferences();
+});
 
 watch(
   () => props.recipe,

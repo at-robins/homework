@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md q-gutter-md">
+  <div class="q-pa-xs q-gutter-xs">
     <q-item class="row">
       <q-item-section top class="col-1">
         <q-item-label
@@ -29,12 +29,12 @@
 
       <q-item-section top class="col-8">
         <q-item-label v-if="ingredient.id && !editMode" class="q-mt-sm">
-          <a
+          <router-link
             v-if="ingredient.recipeReference"
-            :href="'/ui/recipe/' + ingredient.recipeReference"
+            :to="'/ui/recipe/' + ingredient.recipeReference"
           >
             {{ ingredient.text }}
-          </a>
+          </router-link>
           <div v-else>
             {{ ingredient.text }}
           </div>
