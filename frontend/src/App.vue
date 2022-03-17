@@ -24,7 +24,7 @@ function navigateToRecipes() {
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://www.svgrepo.com/show/287687/cooking-stew.svg" />
+            <img src="/icon_main.svg" />
           </q-avatar>
           Heimarbeit
         </q-toolbar-title>

@@ -1,141 +1,81 @@
 <template>
-  <div class="q-pa-md q-gutter-md">
-    <q-list bordered class="rounded-borders" style="max-width: 600px">
-      <q-item-label header>Anhänge</q-item-label>
-
-      <div v-for="(attachment, index) in attachments" :key="attachment.id">
-        <q-item>
-          <q-item-section avatar top>
-            <q-icon name="account_tree" color="black" size="34px" />
-          </q-item-section>
-
-          <q-item-section top>
-            <q-item-label class="q-mt-sm">
-              <router-link :to="'/ui/recipe/' + attachment.id">{{
-                attachment.title
-              }}</router-link></q-item-label
-            >
-          </q-item-section>
-
-          <q-item-section top side>
-            <div class="text-grey-8 q-gutter-xs">
-              <q-btn
-                class="gt-xs"
-                size="12px"
-                flat
-                dense
-                round
-                icon="delete"
-                :color="
-                  !deletionErrorMessages.has(attachment.id)
-                    ? 'grey'
-                    : 'negative'
-                "
-                :loading="isDeltingAttachment.includes(attachment.id)"
-                @click="deleteAttachment(attachment.id)"
-              >
-                <q-tooltip v-if="!deletionErrorMessages.has(attachment.id)">
-                  Anhang löschen
-                </q-tooltip>
-                <q-tooltip v-else>
-                  {{ deletionErrorMessages.get(attachment.id) }}
-                </q-tooltip>
-              </q-btn>
-            </div>
-          </q-item-section>
-        </q-item>
-
-        <q-separator spaced v-if="index + 1 < attachments.length" />
+  <div>
+    <recipe-filter
+      :recipes="recipes"
+      @updated-filter="filteredRecipes = $event"
+    />
+    <div class="q-pa-md q-gutter-md row wrap">
+      <div v-for="recipe in filteredRecipes" :key="recipe.id" class="col-2">
+        <recipe-card :recipe="recipe" />
       </div>
-      <q-inner-loading :showing="isLoadingAttachments">
-        <q-spinner size="50px" color="primary" />
-      </q-inner-loading>
-      <q-item v-if="!!loadAttachmentsErrorMessage">
-        <q-item-section avatar top>
-          <q-icon name="warning" color="negative" />
-        </q-item-section>
-        <q-item-section top>
-          <q-item-label class="q-mt-sm">{{
-            loadAttachmentsErrorMessage
-          }}</q-item-label>
-        </q-item-section>
-      </q-item>
-    </q-list>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { ref, type Ref } from "vue";
-const attachments: Ref<Array<Recipe>> = ref([]);
-const model: Ref<File | null> = ref(null);
-const isLoadingAttachments = ref(false);
-const isUploadingAttachment = ref(false);
-const isDeltingAttachment: Ref<Array<string>> = ref([]);
+import { onMounted, ref, type Ref } from "vue";
+import RecipeCard from "./recipe/RecipeCard.vue";
+import RecipeFilter from "./recipe/RecipeFilter.vue";
+const recipes: Ref<Array<Recipe>> = ref([]);
+const filteredRecipes: Ref<Array<Recipe>> = ref([]);
+const isLoadingRecipes = ref(false);
+const isDeltingRecipe: Ref<Array<string>> = ref([]);
 const deletionErrorMessages: Ref<Map<string, string>> = ref(new Map());
-const loadAttachmentsErrorMessage = ref("");
-const uploadErrorMessage = ref("");
-loadAttachments();
+const loadRecipesErrorMessage = ref("");
 
-function loadAttachments() {
-  isLoadingAttachments.value = true;
-  loadAttachmentsErrorMessage.value = "";
+onMounted(() => {
+  loadRecipes();
+});
+
+function loadRecipes() {
+  isLoadingRecipes.value = true;
+  loadRecipesErrorMessage.value = "";
   axios
     .get("/api/recipes")
     .then((response) => {
-      attachments.value = response.data;
+      recipes.value = response.data;
+      recipes.value.sort(function (a, b) {
+        var nameA = a.title.toLowerCase();
+        var nameB = b.title.toLowerCase();
+        if (nameA < nameB) {
+          return -1;
+        } else if (nameA > nameB) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+      filteredRecipes.value = recipes.value;
     })
     .catch((error) => {
-      attachments.value = [];
-      loadAttachmentsErrorMessage.value = error;
+      recipes.value = [];
+      loadRecipesErrorMessage.value = error;
     })
     .finally(() => {
-      isLoadingAttachments.value = false;
+      isLoadingRecipes.value = false;
     });
-}
-
-function uploadAttachment(value: File | null) {
-  if (value) {
-    isUploadingAttachment.value = true;
-    uploadErrorMessage.value = "";
-    const formData = new FormData();
-    formData.append("file", value);
-    const config = {
-      headers: {
-        "content-type": "multipart/form-data",
-      },
-    };
-    axios
-      .post("/api/attachments", formData, config)
-      .then(() => {
-        loadAttachments();
-      })
-      .catch((error) => {
-        uploadErrorMessage.value = error;
-      })
-      .finally(() => {
-        model.value = null;
-        isUploadingAttachment.value = false;
-      });
-  }
 }
 
 function deleteAttachment(id: string) {
-  isDeltingAttachment.value.push(id);
-  axios
-    .delete("/api/attachment/" + id)
-    .then(() => {
-      loadAttachments();
-    })
-    .catch((error) => {
-      deletionErrorMessages.value.set(id, error);
-    })
-    .finally(() => {
-      isDeltingAttachment.value = isDeltingAttachment.value.filter(
-        (idPendingForDeletion) => idPendingForDeletion !== id
-      );
-    });
+  if (!isDeltingRecipe.value.includes(id)) {
+    isDeltingRecipe.value.push(id);
+    deletionErrorMessages.value.delete(id);
+    axios
+      .delete("/api/recipe/" + id)
+      .then(() => {
+        recipes.value = recipes.value.filter((recipe) => recipe.id !== id);
+      })
+      .catch((error) => {
+        deletionErrorMessages.value.set(id, error);
+      })
+      .finally(() => {
+        isDeltingRecipe.value = isDeltingRecipe.value.filter(
+          (idPendingForDeletion) => idPendingForDeletion !== id
+        );
+      });
+  }
 }
 </script>
 <style scoped lang="scss"></style>
