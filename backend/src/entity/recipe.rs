@@ -175,6 +175,24 @@ impl Recipe {
         Ok(())
     }
 
+    pub fn delete_from_database_by_id(
+        id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        if !Recipe::exists_in_database_by_id(id, connection)? {
+            return Err(HomeworkError::NotFoundError(Some(format!(
+                "The recipe {} does not exist.",
+                id
+            ))));
+        }
+
+        connection.execute(
+            "DELETE FROM recipe WHERE id = ?1",
+            params![id],
+        )?;
+        Ok(())
+    }
+
     pub fn tags_by_id(
         recipe_id: Uuid,
         connection: &Connection,

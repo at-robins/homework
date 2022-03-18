@@ -35,28 +35,15 @@
 
           <q-item-section top side>
             <div class="text-grey-8 q-gutter-xs">
-              <q-btn
+              <delete-button
                 class="gt-xs"
                 size="12px"
-                flat
-                dense
-                round
-                icon="delete"
-                :color="
-                  !deletionErrorMessages.has(attachment.id)
-                    ? 'grey'
-                    : 'negative'
-                "
+                tooltip="Anhang löschen"
+                color="grey"
                 :loading="isDeltingAttachment.includes(attachment.id)"
-                @click="deleteAttachment(attachment.id)"
-              >
-                <q-tooltip v-if="!deletionErrorMessages.has(attachment.id)">
-                  Anhang löschen
-                </q-tooltip>
-                <q-tooltip v-else>
-                  {{ deletionErrorMessages.get(attachment.id) }}
-                </q-tooltip>
-              </q-btn>
+                :error="deletionErrorMessages.get(attachment.id)"
+                @deletion-confirmed="deleteAttachment(attachment.id)"
+              />
             </div>
           </q-item-section>
         </q-item>
@@ -82,6 +69,7 @@ import type { Attachment } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { ref, watch, type Ref } from "vue";
+import DeleteButton from "../general/DeleteButton.vue";
 
 const emit = defineEmits<{
   (event: "updatedAttachments", attachments: Array<Attachment>): void;

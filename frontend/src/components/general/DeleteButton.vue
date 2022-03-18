@@ -14,7 +14,7 @@
     :percentage="percentage"
   >
     <template v-if="!loading" v-slot:loading>
-      <q-icon name="delete"></q-icon>
+      <q-icon name="delete" />
     </template>
     <q-tooltip>
       <div v-if="!error">

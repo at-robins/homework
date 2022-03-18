@@ -7,7 +7,7 @@ use super::{
     },
     recipe_controller::{
         add_attachment_to_recipe, add_tag_to_recipe, all_recipe_tags, all_recipes, change_rating,
-        change_recipe_string_column, create_recipe, remove_tag_from_recipe, single_recipe, modify_ingredient, add_ingredient_to_recipe, remove_ingredient_from_recipe,
+        change_recipe_string_column, create_recipe, remove_tag_from_recipe, single_recipe, modify_ingredient, add_ingredient_to_recipe, remove_ingredient_from_recipe, remove_recipe,
     },
 };
 
@@ -42,7 +42,11 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
             .route(web::post().to(create_recipe))
     )
     .route("/api/recipes/tags", web::get().to(all_recipe_tags))
-    .route("/api/recipe/{id}", web::get().to(single_recipe))
+    .service(
+        web::resource("/api/recipe/{id}")
+        .route(web::get().to(single_recipe))
+        .route(web::delete().to(remove_recipe))
+    )
     .route("/api/recipe/{id}/string/{string_param}", web::post().to(change_recipe_string_column))
     .route("/api/recipe/{id}/rating", web::post().to(change_rating))
     .route("/api/recipe/{id}/tags", web::post().to(add_tag_to_recipe))

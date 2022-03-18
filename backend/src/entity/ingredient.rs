@@ -130,7 +130,7 @@ impl Ingredient {
     ) -> Result<(), HomeworkError> {
         if !Ingredient::exists_in_database_by_id(id, connection)? {
             return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
+                "The ingredient {} does not exist.",
                 id
             ))));
         }

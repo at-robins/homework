@@ -6,7 +6,10 @@
     />
     <div class="q-pa-md q-gutter-md row wrap">
       <div v-for="recipe in filteredRecipes" :key="recipe.id" class="col-2">
-        <recipe-card :recipe="recipe" />
+        <recipe-card
+          :recipe="recipe"
+          @deleted-recipe="remove_recipe(recipe.id)"
+        />
       </div>
     </div>
   </div>
@@ -21,8 +24,6 @@ import RecipeFilter from "./recipe/RecipeFilter.vue";
 const recipes: Ref<Array<Recipe>> = ref([]);
 const filteredRecipes: Ref<Array<Recipe>> = ref([]);
 const isLoadingRecipes = ref(false);
-const isDeltingRecipe: Ref<Array<string>> = ref([]);
-const deletionErrorMessages: Ref<Map<string, string>> = ref(new Map());
 const loadRecipesErrorMessage = ref("");
 
 onMounted(() => {
@@ -58,24 +59,11 @@ function loadRecipes() {
     });
 }
 
-function deleteAttachment(id: string) {
-  if (!isDeltingRecipe.value.includes(id)) {
-    isDeltingRecipe.value.push(id);
-    deletionErrorMessages.value.delete(id);
-    axios
-      .delete("/api/recipe/" + id)
-      .then(() => {
-        recipes.value = recipes.value.filter((recipe) => recipe.id !== id);
-      })
-      .catch((error) => {
-        deletionErrorMessages.value.set(id, error);
-      })
-      .finally(() => {
-        isDeltingRecipe.value = isDeltingRecipe.value.filter(
-          (idPendingForDeletion) => idPendingForDeletion !== id
-        );
-      });
-  }
+function remove_recipe(recipe_id: string) {
+  recipes.value = recipes.value.filter((recipe) => recipe.id !== recipe_id);
+  filteredRecipes.value = recipes.value.filter(
+    (recipe) => recipe.id !== recipe_id
+  );
 }
 </script>
 <style scoped lang="scss"></style>

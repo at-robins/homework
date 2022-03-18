@@ -25,6 +25,7 @@
             arrows
             navigation
             infinite
+            swipeable
           >
             <q-carousel-slide
               v-for="(attachment, index) in imageAttachments"
