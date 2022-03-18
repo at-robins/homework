@@ -48,8 +48,8 @@ const emit = defineEmits<{
   (event: "updatedFilter", recipes: Array<Recipe>): void;
 }>();
 
-const tagModel: Ref<Array<string>> = ref([]);
-const ingredientModel: Ref<Array<string>> = ref([]);
+const tagModel: Ref<Array<string> | null> = ref(null);
+const ingredientModel: Ref<Array<string> | null> = ref(null);
 const nameModel = ref("");
 
 const allTags = computed(() => {
@@ -84,14 +84,16 @@ function matchingRecipes(): Recipe[] {
       recipe.title.includes(nameModel.value)
     );
   }
-  if (tagModel.value.length > 0) {
+  const filteredTags = tagModel.value;
+  if (filteredTags && filteredTags.length > 0) {
     filteredRecipes = filteredRecipes.filter((recipe) =>
-      tagModel.value.every((tag) => recipe.tags.includes(tag))
+      filteredTags.every((tag) => recipe.tags.includes(tag))
     );
   }
-  if (ingredientModel.value.length > 0) {
+  const filteredIngredients = ingredientModel.value;
+  if (filteredIngredients && filteredIngredients.length > 0) {
     filteredRecipes = filteredRecipes.filter((recipe) =>
-      ingredientModel.value.every((ingredient) =>
+      filteredIngredients.every((ingredient) =>
         recipe.ingredients.map((i) => i.text).includes(ingredient)
       )
     );

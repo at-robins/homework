@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-xs q-gutter-xs">
+  <div v-click-away="clickOutside" class="q-pa-xs q-gutter-xs">
     <q-item class="row">
       <q-item-section top class="col-1">
         <q-item-label
@@ -71,7 +71,7 @@
       <q-item-section top side class="col-2">
         <div class="text-grey-8 q-gutter-xs">
           <q-btn
-            v-if="ingredient.id && !editMode"
+            v-show="ingredient.id && !editMode"
             class="gt-xs"
             size="12px"
             flat
@@ -80,7 +80,7 @@
             icon="edit"
             :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
             :loading="isCreatingOrUpdatingIngredient"
-            @click="editMode = true"
+            @click="clickEditButton"
           >
             <q-tooltip>
               <div v-if="!creationOrUpdateErrorMessage">Zutat ändern</div>
@@ -90,7 +90,7 @@
             </q-tooltip>
           </q-btn>
           <q-btn
-            v-else
+            v-show="!ingredient.id || editMode"
             class="gt-xs"
             size="12px"
             flat
@@ -109,7 +109,7 @@
             </q-tooltip>
           </q-btn>
           <q-btn
-            v-if="!ingredient.id || editMode"
+            v-show="!ingredient.id || editMode"
             class="gt-xs"
             size="12px"
             flat
@@ -129,7 +129,7 @@
             </q-tooltip>
           </q-btn>
           <q-btn
-            v-if="props.ingredient.id && !editMode"
+            v-show="props.ingredient.id && !editMode"
             class="gt-xs"
             size="12px"
             flat
@@ -157,7 +157,7 @@
 import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import { equality_shallow_object } from "@/scripts/utilities";
 import axios from "axios";
-import { ref, watch, type Ref } from "vue";
+import { nextTick, ref, watch, type Ref } from "vue";
 
 const emit = defineEmits<{
   (event: "addedIngredient", ingredient: Ingredient): void;
@@ -206,8 +206,30 @@ function addOrUpdateIngredient() {
   }
 }
 
+function clickOutside() {
+  if (!props.ingredient.id || editMode.value) {
+    addOrUpdateIngredient();
+  }
+}
+
+function clickEditButton() {
+  editMode.value = true;
+  nextTick(() => {
+    if (amountInputRef.value) {
+      amountInputRef.value.focus();
+    }
+  });
+}
+
 function addIngredient() {
-  if (!isCreatingOrUpdatingIngredient.value && !props.ingredient.id) {
+  if (
+    !isCreatingOrUpdatingIngredient.value &&
+    !props.ingredient.id &&
+    (amountModel.value ||
+      unitModel.value ||
+      textModel.value ||
+      recipeReferenceModel.value)
+  ) {
     isCreatingOrUpdatingIngredient.value = true;
     creationOrUpdateErrorMessage.value = "";
     let createdIngredient: Ingredient = {
