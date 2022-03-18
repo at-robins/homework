@@ -128,25 +128,16 @@
               </div>
             </q-tooltip>
           </q-btn>
-          <q-btn
+          <delete-button
             v-show="props.ingredient.id && !editMode"
             class="gt-xs"
             size="12px"
-            flat
-            dense
-            round
-            icon="delete"
-            :color="!deletionErrorMessage ? 'grey' : 'negative'"
+            color="grey"
             :loading="isDeltingIngredient"
-            @click="deleteIngredient"
-          >
-            <q-tooltip>
-              <div v-if="!deletionErrorMessage">Zutat löschen</div>
-              <div v-else>
-                {{ deletionErrorMessage }}
-              </div>
-            </q-tooltip>
-          </q-btn>
+            :error="deletionErrorMessage"
+            tooltip="Zutat löschen"
+            @deletion-confirmed="deleteIngredient"
+          />
         </div>
       </q-item-section>
     </q-item>
@@ -158,6 +149,7 @@ import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import { equality_shallow_object } from "@/scripts/utilities";
 import axios from "axios";
 import { nextTick, ref, watch, type Ref } from "vue";
+import DeleteButton from "../general/DeleteButton.vue";
 
 const emit = defineEmits<{
   (event: "addedIngredient", ingredient: Ingredient): void;
