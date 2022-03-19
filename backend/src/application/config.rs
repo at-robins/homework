@@ -41,6 +41,7 @@ use super::error::HomeworkError;
 pub struct Configuration {
     server_address: Option<String>,
     server_port: Option<String>,
+    attachment_path: Option<String>,
 }
 
 impl Configuration {
@@ -133,7 +134,7 @@ impl Configuration {
                       )",
             [],
         )?;
-        
+
         Ok(())
     }
 
@@ -173,10 +174,17 @@ impl Configuration {
     }
 
     /// The path to the attachments folder.
-    pub fn application_attachments_folder_path() -> PathBuf {
-        let mut path = Configuration::application_configuration_folder_path();
-        path.push(DEFAULT_FOLDER_APPLICATION_ATTACHMENTS);
-        path
+    pub fn application_attachments_folder_path(&self) -> PathBuf {
+        if let Some(configured_path_string) = self.attachment_path.clone() {
+            if let Ok(configured_path) = PathBuf::try_from(configured_path_string) {
+                return configured_path;
+            } else {
+                todo!()
+            }
+        }
+        let mut default_path = Configuration::application_configuration_folder_path();
+        default_path.push(DEFAULT_FOLDER_APPLICATION_ATTACHMENTS);
+        default_path
     }
 
     /// Returns the address of the server.
@@ -204,6 +212,7 @@ impl Default for Configuration {
         Self {
             server_address: None,
             server_port: None,
+            attachment_path: None,
         }
     }
 }
