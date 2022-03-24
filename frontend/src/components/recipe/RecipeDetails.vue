@@ -76,6 +76,7 @@ import RecipeEditHeader from "./RecipeEditHeader.vue";
 import RecipeEditTags from "./RecipeEditTags.vue";
 import RecipeEditAttachments from "./RecipeEditAttachments.vue";
 import RecipeEditIngredients from "./RecipeEditIngredients.vue";
+import { isImage } from "@/scripts/utilities";
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -96,11 +97,8 @@ const imageAttachments = computed(() => {
   if (!recipe.value) {
     return [];
   } else {
-    return recipe.value.attachments.filter(
-      (attachment) =>
-        attachment.name.toLowerCase().endsWith(".jpg") ||
-        attachment.name.toLowerCase().endsWith(".jpeg") ||
-        attachment.name.toLowerCase().endsWith(".png")
+    return recipe.value.attachments.filter((attachment) =>
+      isImage(attachment.name)
     );
   }
 });
