@@ -1,35 +1,23 @@
 <template>
   <div class="row wrap q-gutter-md q-pa-md">
-    <q-select
+    <input-filter
       v-model="nameModel"
-      :options="nameOptions"
+      :options="allNames"
       label="Rezeptnamen filtern"
-      clearable
-      use-input
-      input-debounce="0"
-      @filter="applyInputFilterNames"
       class="col-3"
     />
-    <q-select
+    <input-filter
       v-model="tagModel"
-      :options="tagOptions"
+      :options="allTags"
       label="Schlagwörter filtern"
-      clearable
       multiple
-      use-input
-      input-debounce="0"
-      @filter="applyInputFilterTags"
       class="col-3"
     />
-    <q-select
+    <input-filter
       v-model="ingredientModel"
-      :options="ingredientOptions"
+      :options="allIngredients"
       label="Zutaten filtern"
-      clearable
       multiple
-      use-input
-      input-debounce="0"
-      @filter="applyInputFilterIngredients"
       class="col-3"
     />
   </div>
@@ -37,8 +25,8 @@
 
 <script setup lang="ts">
 import type { Recipe } from "@/scripts/types";
-import type { QSelect } from "quasar";
 import { computed, ref, watch, type Ref } from "vue";
+import InputFilter from "../general/InputFilter.vue";
 
 const props = defineProps({
   recipes: { type: Array as () => Array<Recipe>, required: true },
@@ -69,13 +57,10 @@ const allIngredients = computed(() => {
   return [...new Set<string>(ingredients)].sort();
 });
 
-const nameOptions: Ref<Array<string>> = ref(allNames.value);
-const tagOptions: Ref<Array<string>> = ref(allTags.value);
-const ingredientOptions: Ref<Array<string>> = ref(allIngredients.value);
-
 watch([nameModel, tagModel, ingredientModel], () => {
   emit("updatedFilter", matchingRecipes());
 });
+
 
 function matchingRecipes(): Recipe[] {
   let filteredRecipes = props.recipes;
@@ -99,93 +84,6 @@ function matchingRecipes(): Recipe[] {
     );
   }
   return filteredRecipes;
-}
-
-function applyInputFilterNames(
-  val: string,
-  update: (
-    callback: () => void,
-    referenceCallback: (qSelectReference: QSelect) => void
-  ) => void
-): void {
-  update(
-    // input filtering
-    () => {
-      if (!val) {
-        nameOptions.value = allNames.value;
-      } else {
-        const needle = val.toLowerCase();
-        nameOptions.value = allNames.value.filter((v) =>
-          v.toLowerCase().includes(needle)
-        );
-      }
-    },
-    // autoselect
-    (ref: QSelect) => {
-      if (!!val && ref.options && ref.options.length > 0) {
-        ref.setOptionIndex(-1);
-        ref.moveOptionSelection(1, true);
-      }
-    }
-  );
-}
-
-function applyInputFilterTags(
-  val: string,
-  update: (
-    callback: () => void,
-    referenceCallback: (qSelectReference: QSelect) => void
-  ) => void
-): void {
-  update(
-    // input filtering
-    () => {
-      if (!val) {
-        tagOptions.value = allTags.value;
-      } else {
-        const needle = val.toLowerCase();
-        tagOptions.value = allTags.value.filter((v) =>
-          v.toLowerCase().includes(needle)
-        );
-      }
-    },
-    // autoselect
-    (ref: QSelect) => {
-      if (!!val && ref.options && ref.options.length > 0) {
-        ref.setOptionIndex(-1);
-        ref.moveOptionSelection(1, true);
-      }
-    }
-  );
-}
-
-function applyInputFilterIngredients(
-  val: string,
-  update: (
-    callback: () => void,
-    referenceCallback: (qSelectReference: QSelect) => void
-  ) => void
-): void {
-  update(
-    // input filtering
-    () => {
-      if (!val) {
-        ingredientOptions.value = allIngredients.value;
-      } else {
-        const needle = val.toLowerCase();
-        ingredientOptions.value = allIngredients.value.filter((v) =>
-          v.toLowerCase().includes(needle)
-        );
-      }
-    },
-    // autoselect
-    (ref: QSelect) => {
-      if (!!val && ref.options && ref.options.length > 0) {
-        ref.setOptionIndex(-1);
-        ref.moveOptionSelection(1, true);
-      }
-    }
-  );
 }
 </script>
 <style scoped lang="scss"></style>
