@@ -8,6 +8,10 @@ const router = useRouter();
 function navigateToRecipes() {
   router.push({ name: "recipes" });
 }
+
+function navigateToPayments() {
+  router.push({ name: "payments" });
+}
 </script>
 
 <template>
@@ -35,6 +39,9 @@ function navigateToRecipes() {
       <q-list separator>
         <q-item clickable v-ripple @click="navigateToRecipes">
           <q-item-section>Rezepte</q-item-section>
+        </q-item>
+        <q-item clickable v-ripple @click="navigateToPayments">
+          <q-item-section>Zahlungen</q-item-section>
         </q-item>
       </q-list>
     </q-drawer>

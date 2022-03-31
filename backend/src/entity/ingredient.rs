@@ -135,10 +135,7 @@ impl Ingredient {
             ))));
         }
 
-        connection.execute(
-            "DELETE FROM ingredient WHERE id = ?1",
-            params![id],
-        )?;
+        connection.execute("DELETE FROM ingredient WHERE id = ?1", params![id])?;
         Ok(())
     }
 

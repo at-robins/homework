@@ -52,7 +52,7 @@ const ingredientsWithEmptyEntity = computed(() => {
     text: "",
     recipeReference: null,
     recipeId: props.recipe.id,
-    creationTime: new Date(),
+    creationTime: new Date().toUTCString(),
   };
   withEmptyEntity.push(emptyEntity);
   return withEmptyEntity;

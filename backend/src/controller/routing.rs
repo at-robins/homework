@@ -5,9 +5,15 @@ use super::{
     attachment_controller::{
         add_attachment, all_attachments, delete_attachment, download_attachment,
     },
+    payment_controller::{
+        add_attachment_to_payment, add_tag_to_payment, all_payment_tags, all_payments,
+        change_payment_string_column, create_payment, remove_payment, remove_tag_from_payment,
+        single_payment, remove_multiple_payments,
+    },
     recipe_controller::{
-        add_attachment_to_recipe, add_tag_to_recipe, all_recipe_tags, all_recipes, change_rating,
-        change_recipe_string_column, create_recipe, remove_tag_from_recipe, single_recipe, modify_ingredient, add_ingredient_to_recipe, remove_ingredient_from_recipe, remove_recipe,
+        add_attachment_to_recipe, add_ingredient_to_recipe, add_tag_to_recipe, all_recipe_tags,
+        all_recipes, change_rating, change_recipe_string_column, create_recipe, modify_ingredient,
+        remove_ingredient_from_recipe, remove_recipe, remove_tag_from_recipe, single_recipe,
     },
 };
 
@@ -52,13 +58,30 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
     .route("/api/recipe/{id}/tags", web::post().to(add_tag_to_recipe))
     .route("/api/recipe/{id}/tag/{tag_name}", web::delete().to(remove_tag_from_recipe))
     .route("/api/recipe/{id}/attachments", web::post().to(add_attachment_to_recipe))
-    .route("/api/recipe/{id}", web::get().to(single_recipe))
     .service(
         web::resource("/api/recipe/{id}/ingredients")
         .route(web::post().to(add_ingredient_to_recipe))
         .route(web::patch().to(modify_ingredient))
     )
     .route("/api/recipe/{recipe_id}/ingredient/{ingredient_id}", web::delete().to(remove_ingredient_from_recipe))
+
+    // Payment controller routing
+    .service(
+        web::resource("/api/payments")
+            .route(web::get().to(all_payments))
+            .route(web::patch().to(remove_multiple_payments))
+            .route(web::post().to(create_payment))
+    )
+    .route("/api/payment/tags", web::get().to(all_payment_tags))
+    .service(
+        web::resource("/api/payment/{id}")
+        .route(web::get().to(single_payment))
+        .route(web::delete().to(remove_payment))
+    )
+    .route("/api/payment/{id}/string/{string_param}", web::post().to(change_payment_string_column))
+    .route("/api/payment/{id}/tags", web::post().to(add_tag_to_payment))
+    .route("/api/payment/{id}/tag/{tag_name}", web::delete().to(remove_tag_from_payment))
+    .route("/api/payment/{id}/attachments", web::post().to(add_attachment_to_payment))
 
     // Registers static frontend resources. Needs to be last to not overwrite other routes.
     .service(Files::new("/", "./static_dist").show_files_listing());

@@ -3,13 +3,13 @@
     outlined
     bottom-slots
     v-model="title"
-    label="Rezepttitel"
+    label="Zahlungsbezug"
     counter
     maxlength="1000"
-    :readonly="isUploadingRecipe"
+    :readonly="isUploadingPayment"
     :error="!!uploadErrorMessage"
     :error-message="uploadErrorMessage"
-    @keydown.enter="uploadRecipe"
+    @keydown.enter="uploadPayment"
   >
     <template v-slot:before>
       <q-icon name="local_dining" color="primary" />
@@ -24,15 +24,15 @@
       />
     </template>
 
-    <template v-slot:hint> Erstellen Sie ein neues Rezept. </template>
+    <template v-slot:hint> Erstellen Sie ein neue Zahlung. </template>
 
     <template v-slot:after>
       <q-btn
         round
         color="primary"
         icon="add"
-        :disable="isUploadingRecipe || !title"
-        @click="uploadRecipe"
+        :disable="isUploadingPayment || !title"
+        @click="uploadPayment"
       />
     </template>
   </q-input>
@@ -45,12 +45,12 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 const title: Ref<string> = ref("");
-const isUploadingRecipe = ref(false);
+const isUploadingPayment = ref(false);
 const uploadErrorMessage = ref("");
 
-function uploadRecipe() {
+function uploadPayment() {
   if (title.value) {
-    isUploadingRecipe.value = true;
+    isUploadingPayment.value = true;
     uploadErrorMessage.value = "";
     const formData = JSON.stringify(title.value);
     const config = {
@@ -59,20 +59,20 @@ function uploadRecipe() {
       },
     };
     axios
-      .post("/api/recipes", formData, config)
+      .post("/api/payments", formData, config)
       .then((response) => {
-        return router.push({ name: "recipe", params: { id: response.data } });
+        return router.push({ name: "payment", params: { id: response.data } });
       })
       .catch((error) => {
         uploadErrorMessage.value = error;
       })
       .finally(() => {
         title.value = "";
-        isUploadingRecipe.value = false;
+        isUploadingPayment.value = false;
       });
   } else {
     uploadErrorMessage.value =
-      "Bitte tragen Sie einen Titel für das zu erstellende Rezept ein.";
+      "Bitte tragen Sie einen Bezugstitel für die erstellende Zahlung ein.";
   }
 }
 </script>

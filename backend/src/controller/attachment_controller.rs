@@ -2,7 +2,7 @@ use std::{fs::File, io::Write, path::Path, sync::Arc};
 
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
-use actix_web::{web, HttpResponse, HttpResponseBuilder, Responder, HttpRequest};
+use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 use futures_util::TryStreamExt as _;
 use rusqlite::params;
 use uuid::Uuid;
@@ -28,7 +28,10 @@ pub async fn all_attachments() -> actix_web::Result<impl Responder> {
     Ok(web::Json(attachments))
 }
 
-pub async fn add_attachment(request: HttpRequest, mut payload: Multipart) -> Result<HttpResponse, HomeworkError> {
+pub async fn add_attachment(
+    request: HttpRequest,
+    mut payload: Multipart,
+) -> Result<HttpResponse, HomeworkError> {
     // Open a databse connection first so the file is not saved in case of connection errors.
     let conn = Configuration::database_connection()?;
 
@@ -36,7 +39,9 @@ pub async fn add_attachment(request: HttpRequest, mut payload: Multipart) -> Res
     let uuid = Configuration::generate_uuid();
 
     // Create the attachment folder.
-    let app_config= request.app_data::<Arc<Configuration>>().expect("The configuration must be accessible.");
+    let app_config = request
+        .app_data::<Arc<Configuration>>()
+        .expect("The configuration must be accessible.");
     let mut file_path = app_config.application_attachments_folder_path();
     std::fs::create_dir_all(&file_path)?;
     file_path.push(uuid.to_string());
@@ -71,13 +76,18 @@ pub async fn add_attachment(request: HttpRequest, mut payload: Multipart) -> Res
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
 
-pub async fn delete_attachment(request: HttpRequest, id: web::Path<Uuid>) -> Result<HttpResponseBuilder, HomeworkError> {
+pub async fn delete_attachment(
+    request: HttpRequest,
+    id: web::Path<Uuid>,
+) -> Result<HttpResponseBuilder, HomeworkError> {
     let uuid: Uuid = id.into_inner();
     // Open a databse connection first so the file is not deleted in case of connection errors.
     let conn = Configuration::database_connection()?;
 
     // Get the attachment file path.
-    let app_config = request.app_data::<Arc<Configuration>>().expect("The configuration must be accessible.");
+    let app_config = request
+        .app_data::<Arc<Configuration>>()
+        .expect("The configuration must be accessible.");
     let mut file_path = app_config.application_attachments_folder_path();
     file_path.push(uuid.to_string());
 
@@ -91,10 +101,15 @@ pub async fn delete_attachment(request: HttpRequest, id: web::Path<Uuid>) -> Res
     Ok(HttpResponse::Ok())
 }
 
-pub async fn download_attachment(request: HttpRequest, id: web::Path<Uuid>) -> Result<NamedFile, HomeworkError> {
+pub async fn download_attachment(
+    request: HttpRequest,
+    id: web::Path<Uuid>,
+) -> Result<NamedFile, HomeworkError> {
     let uuid: Uuid = id.into_inner();
     // Get the attachment file path.
-    let app_config = request.app_data::<Arc<Configuration>>().expect("The configuration must be accessible.");
+    let app_config = request
+        .app_data::<Arc<Configuration>>()
+        .expect("The configuration must be accessible.");
     let mut file_path = app_config.application_attachments_folder_path();
     file_path.push(uuid.to_string());
     let conn = Configuration::database_connection()?;

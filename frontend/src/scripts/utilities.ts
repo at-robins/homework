@@ -1,4 +1,4 @@
-import type { Recipe } from "./types";
+import type { Payment, PaymentType, Recipe } from "./types";
 
 /**
  * Compares two objects for shallow equality.
@@ -15,7 +15,7 @@ export function equality_shallow_object(
 }
 
 /**
- * Checks if the specified file name corresponds to 
+ * Checks if the specified file name corresponds to
  * an image file.
  */
 export function isImage(fileName: string): boolean {
@@ -38,4 +38,28 @@ export function getRecipeImageUrl(recipe: Recipe): string {
   return imageAttachment
     ? "/api/attachment/" + imageAttachment.id
     : "/icon_recipe.svg";
+}
+
+export function getInitialPaymentDateAsUTCString(
+  paymentType: PaymentType
+): string {
+  if (paymentType.OneOff) {
+    return paymentType.OneOff.start;
+  } else if (paymentType.Daily) {
+    return paymentType.Daily.start;
+  } else if (paymentType.Weekly) {
+    return paymentType.Weekly.start;
+  } else if (paymentType.Monthly) {
+    return paymentType.Monthly.start;
+  } else if (paymentType.Annualy) {
+    return paymentType.Annualy.start;
+  } else {
+    throw new Error("Not a valid payment type: " + paymentType);
+  }
+}
+
+export function getTotalPaymentAmount(record: Record<string, string>): number {
+  return Object.values(record).reduce((previous: number, current: string) => {
+    return previous + parseFloat(current);
+  }, 0);
 }

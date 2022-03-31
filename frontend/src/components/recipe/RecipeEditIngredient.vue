@@ -233,7 +233,7 @@ function addIngredient() {
       text: textModel.value,
       recipeReference: recipeReferenceModel.value,
       recipeId: props.ingredient.recipeId,
-      creationTime: new Date(),
+      creationTime: new Date().toUTCString(),
     };
     const formData = JSON.stringify(createdIngredient);
     const config = {

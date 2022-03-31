@@ -61,7 +61,7 @@ function loadRecipes() {
 
 function remove_recipe(recipe_id: string) {
   recipes.value = recipes.value.filter((recipe) => recipe.id !== recipe_id);
-  filteredRecipes.value = recipes.value.filter(
+  filteredRecipes.value = filteredRecipes.value.filter(
     (recipe) => recipe.id !== recipe_id
   );
 }

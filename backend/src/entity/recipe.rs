@@ -186,10 +186,7 @@ impl Recipe {
             ))));
         }
 
-        connection.execute(
-            "DELETE FROM recipe WHERE id = ?1",
-            params![id],
-        )?;
+        connection.execute("DELETE FROM recipe WHERE id = ?1", params![id])?;
         Ok(())
     }
 

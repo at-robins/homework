@@ -1,6 +1,9 @@
 //! The `error` module defines specific error types.
 
-use actix_web::{http::{StatusCode, header::ContentType}, HttpResponse};
+use actix_web::{
+    http::{header::ContentType, StatusCode},
+    HttpResponse,
+};
 use serde::Serialize;
 
 /// An application wide error type.
@@ -19,7 +22,7 @@ pub enum HomeworkError {
     /// A error representing a missing resource.
     NotFoundError(Option<String>),
     /// A error representing an erroneous request.
-    BadRequestError(Option<String>)
+    BadRequestError(Option<String>),
 }
 
 #[derive(Debug, Serialize)]

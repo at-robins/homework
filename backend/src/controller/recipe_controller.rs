@@ -30,9 +30,7 @@ pub async fn create_recipe(title: web::Json<String>) -> Result<HttpResponse, Hom
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
 
-pub async fn remove_recipe(
-    path: web::Path<Uuid>,
-) -> Result<HttpResponse, HomeworkError> {
+pub async fn remove_recipe(path: web::Path<Uuid>) -> Result<HttpResponse, HomeworkError> {
     let uuid_recipe = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::delete_from_database_by_id(uuid_recipe, &conn)?;

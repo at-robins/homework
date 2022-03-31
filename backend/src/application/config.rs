@@ -110,6 +110,18 @@ impl Configuration {
             [],
         )?;
         connection.execute(
+            "CREATE TABLE IF NOT EXISTS payment (
+                    id                              BLOB PRIMARY KEY,
+                    target                          TEXT NOT NULL,
+                    note                            TEXT NOT NULL,
+                    paid                            TEXT NOT NULL,                    
+                    involved                        TEXT NOT NULL,
+                    payment_type                    TEXT NOT NULL,
+                    creation_time                   TEXT NOT NULL
+                      )",
+            [],
+        )?;
+        connection.execute(
             "CREATE TABLE IF NOT EXISTS attachment_recipe_mapping (
                     id                          INTEGER PRIMARY KEY,
                     recipe_id                   BLOB NOT NULL,
@@ -134,7 +146,31 @@ impl Configuration {
                       )",
             [],
         )?;
-
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS attachment_payment_mapping (
+                    id                          INTEGER PRIMARY KEY,
+                    payment_id                   BLOB NOT NULL,
+                    attachment_id               BLOB NOT NULL,
+                    FOREIGN KEY (payment_id)       REFERENCES payment (id) 
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE,
+                    FOREIGN KEY (attachment_id) REFERENCES attachment (id) 
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE
+                      )",
+            [],
+        )?;
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS tag_payment_mapping (
+                    id                          INTEGER PRIMARY KEY,
+                    tag                         TEXT NOT NULL,
+                    payment_id                  BLOB NOT NULL,
+                    FOREIGN KEY (payment_id)    REFERENCES payment (id) 
+                        ON UPDATE CASCADE
+                        ON DELETE CASCADE
+                      )",
+            [],
+        )?;
         Ok(())
     }
 
