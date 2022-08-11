@@ -149,7 +149,7 @@ impl Configuration {
         connection.execute(
             "CREATE TABLE IF NOT EXISTS attachment_payment_mapping (
                     id                          INTEGER PRIMARY KEY,
-                    payment_id                   BLOB NOT NULL,
+                    payment_id                  BLOB NOT NULL,
                     attachment_id               BLOB NOT NULL,
                     FOREIGN KEY (payment_id)       REFERENCES payment (id) 
                         ON UPDATE CASCADE
