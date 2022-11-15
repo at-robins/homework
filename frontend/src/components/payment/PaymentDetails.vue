@@ -17,6 +17,12 @@
 
       <q-separator />
 
+      <q-item>
+        <payment-edit-type :payment="payment" />
+      </q-item>
+
+      <q-separator />
+
       <q-card-section horizontal class="row" style="height: auto">
         <payment-edit-note :id="id" v-model="editorModel" />
       </q-card-section>
@@ -44,6 +50,7 @@ import PaymentEditNote from "./PaymentEditNote.vue";
 import PaymentEditHeader from "./PaymentEditHeader.vue";
 import PaymentEditTags from "./PaymentEditTags.vue";
 import PaymentEditAttachments from "./PaymentEditAttachments.vue";
+import PaymentEditType from "./PaymentEditType.vue";
 
 const props = defineProps({
   id: { type: String, required: true },

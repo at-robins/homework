@@ -44,19 +44,15 @@ export type Payment = {
 };
 
 export type PaymentType = {
-  OneOff: OneOffPaymentType | undefined;
-  Daily: RecurringPaymentType | undefined;
-  Weekly: RecurringPaymentType | undefined;
-  Monthly: RecurringPaymentType | undefined;
-  Annualy: RecurringPaymentType | undefined;
+  OneOff: PaymentTypeValue | undefined;
+  Daily: PaymentTypeValue | undefined;
+  Weekly: PaymentTypeValue | undefined;
+  Monthly: PaymentTypeValue | undefined;
+  Annualy: PaymentTypeValue | undefined;
 };
 
-export type OneOffPaymentType = {
+export type PaymentTypeValue = {
+  distance: number | undefined;
   start: string;
-};
-
-export type RecurringPaymentType = {
-  distance: number;
-  start: string;
-  end: string;
+  end: string | undefined;
 };

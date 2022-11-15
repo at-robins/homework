@@ -16,6 +16,7 @@
         v-model:selected="selectedRowsModel"
         :selected-rows-label="getSelectedRowsLabel"
         :pagination="{ sortBy: 'date', descending: true, rowsPerPage: 50 }"
+        @row-click="navigateToPayment"
       >
         <template v-slot:top>
           <div class="q-table__title">Rechnungen</div>
@@ -44,6 +45,7 @@ import axios from "axios";
 import { onMounted, ref, type Ref } from "vue";
 import PaymentFilter from "./payment/PaymentFilter.vue";
 import DeleteButton from "./general/DeleteButton.vue";
+import { useRouter } from "vue-router";
 const payments: Ref<Array<Payment>> = ref([]);
 const filteredPayments: Ref<Array<Payment>> = ref([]);
 const isLoadingPayments = ref(false);
@@ -54,6 +56,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR",
 });
+const router = useRouter();
 const selectedRowsModel: Ref<Array<Payment>> = ref([]);
 
 const columns: {
@@ -201,6 +204,10 @@ function getSelectedRowsLabel(numberOfSelectedRows: number): string {
 
 function getRowId(row: Payment): string {
   return row.id;
+}
+
+function navigateToPayment(_event: Event, payment: Payment) {
+  router.push({ name: "payment", params: { id: payment.id } });
 }
 </script>
 <style scoped lang="scss"></style>

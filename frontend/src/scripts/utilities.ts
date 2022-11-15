@@ -1,4 +1,5 @@
-import type { Payment, PaymentType, Recipe } from "./types";
+import type { PaymentType, Recipe } from "./types";
+import { DateTime } from "luxon";
 
 /**
  * Compares two objects for shallow equality.
@@ -62,4 +63,84 @@ export function getTotalPaymentAmount(record: Record<string, string>): number {
   return Object.values(record).reduce((previous: number, current: string) => {
     return previous + parseFloat(current);
   }, 0);
+}
+
+export function paymentTypeToLabel(paymentType: PaymentType):
+  | {
+      label: "Einmalzahlung";
+      value: "OneOff";
+    }
+  | {
+      label: "Täglich";
+      value: "Daily";
+    }
+  | {
+      label: "Wöchentlich";
+      value: "Weekly";
+    }
+  | {
+      label: "Monatlich";
+      value: "Monthly";
+    }
+  | {
+      label: "Jährlich";
+      value: "Annualy";
+    } {
+  if (Object.keys(paymentType).includes("OneOff")) {
+    return {
+      label: "Einmalzahlung",
+      value: "OneOff",
+    };
+  } else if (Object.keys(paymentType).includes("Daily")) {
+    return {
+      label: "Täglich",
+      value: "Daily",
+    };
+  } else if (Object.keys(paymentType).includes("Weekly")) {
+    return {
+      label: "Wöchentlich",
+      value: "Weekly",
+    };
+  } else if (Object.keys(paymentType).includes("Monthly")) {
+    return {
+      label: "Monatlich",
+      value: "Monthly",
+    };
+  } else if (Object.keys(paymentType).includes("Annualy")) {
+    return {
+      label: "Jährlich",
+      value: "Annualy",
+    };
+  } else {
+    throw new Error(paymentType + " is not a valid payment type.");
+  }
+}
+
+export function getPaymentTypeDistance(
+  paymentType: PaymentType
+): number | null {
+  const val = Object.values(paymentType)[0];
+  if (val) {
+    return val.distance ? val.distance : null;
+  } else {
+    throw new Error("Invalid Paymentype: " + paymentType);
+  }
+}
+
+export function getPaymentTypeEnd(paymentType: PaymentType): DateTime | null {
+  const val = Object.values(paymentType)[0];
+  if (val) {
+    return val.end ? DateTime.fromISO(val.end) : null;
+  } else {
+    throw new Error("Invalid Paymentype: " + paymentType);
+  }
+}
+
+export function getPaymentTypeStart(paymentType: PaymentType): DateTime {
+  const val = Object.values(paymentType)[0];
+  if (val) {
+    return DateTime.fromISO(val.start);
+  } else {
+    throw new Error("Invalid Paymentype: " + paymentType);
+  }
 }
