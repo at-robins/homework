@@ -38,8 +38,8 @@ function loadRecipes() {
     .then((response) => {
       recipes.value = response.data;
       recipes.value.sort(function (a, b) {
-        var nameA = a.title.toLowerCase();
-        var nameB = b.title.toLowerCase();
+        const nameA = a.title.toLowerCase();
+        const nameB = b.title.toLowerCase();
         if (nameA < nameB) {
           return -1;
         } else if (nameA > nameB) {
