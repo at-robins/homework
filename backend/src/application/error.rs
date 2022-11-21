@@ -66,18 +66,20 @@ pub struct InternalError {
 }
 
 impl InternalError {
-    /// Creates a new internal error.
+    /// Creates a new internal error and automatically logs the error.
     pub fn new<T: ToString, U: ToString, V: ToString>(
         name: T,
         internal_message: U,
         external_message: V,
     ) -> Self {
-        InternalError {
+        let internal_error = InternalError {
             uuid: Uuid::new_v4(),
             name: name.to_string(),
             internal_message: internal_message.to_string(),
             external_message: external_message.to_string(),
-        }
+        };
+        log::error!("{}", internal_error);
+        internal_error
     }
 }
 

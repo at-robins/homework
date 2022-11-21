@@ -9,9 +9,11 @@ actix-multipart = "0.4.0"
 actix-web = {version="4.2.1", features=["openssl"]}
 bigdecimal = { version = "0.3.0", features = ["serde"] }
 chrono = { version = "0.4.23", features = ["serde"] }
+env_logger = "0.9.3"
 futures-util = "0.3.25"
 getset = "0.1.2"
 image = { version = "0.24.5", features = ["webp-encoder"] }
+log = "0.4.17"
 openssl = "0.10.42"
 sanitize-filename = "0.4.0"
 serde = { version = "1.0.147", features = ["derive"] }

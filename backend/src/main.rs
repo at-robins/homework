@@ -6,6 +6,7 @@ use controller::routing::routing_config;
 
 #[actix_web::main]
 async fn main() -> Result<(), HomeworkError> {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let app_config = Arc::new(init_config());
     let app_config_internal = Arc::clone(&app_config);
     Configuration::initialise_database()?;
