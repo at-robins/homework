@@ -4,7 +4,10 @@ use actix_web::{web, HttpResponse, Responder};
 use uuid::Uuid;
 
 use crate::{
-    application::{config::Configuration, error::HomeworkError},
+    application::{
+        config::Configuration,
+        error::{HomeworkError, InternalError},
+    },
     entity::{ingredient::Ingredient, recipe::Recipe},
 };
 
@@ -122,11 +125,15 @@ pub async fn modify_ingredient(
     let uuid_recipe = path.into_inner();
     let ingredient = ingredient.into_inner();
     if uuid_recipe != ingredient.recipe_id() {
-        return Err(HomeworkError::BadRequestError(Some(format!(
+        return Err(HomeworkError::BadRequestError(InternalError::new(
+            "ID missmatch",
+            format!(
             "The requested recipe {} does not match the recipe referenced by the ingredient {}.",
             uuid_recipe,
             ingredient.recipe_id()
-        ))));
+        ),
+            "Mismatching recipe and ingredient during ingredient modification.",
+        )));
     }
     let conn = Configuration::database_connection()?;
     ingredient.update_in_database(&conn)?;

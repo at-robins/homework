@@ -3,7 +3,7 @@ use rusqlite::{params, Connection, Row};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::application::error::HomeworkError;
+use crate::application::error::{HomeworkError, InternalError};
 
 use super::recipe::Recipe;
 
@@ -52,10 +52,6 @@ impl Ingredient {
         self.recipe_id = recipe_id;
     }
 
-    pub fn exists_in_database(&self, connection: &Connection) -> Result<bool, rusqlite::Error> {
-        Ingredient::exists_in_database_by_id(self.id(), connection)
-    }
-
     pub fn select_from_database_by_recipe_id(
         recipe_id: Uuid,
         connection: &Connection,
@@ -77,19 +73,18 @@ impl Ingredient {
     }
 
     pub fn insert_into_database(&self, connection: &Connection) -> Result<(), HomeworkError> {
-        if self.exists_in_database(connection)? {
-            return Err(HomeworkError::BadRequestError(Some(format!(
-                "The ingredient {} already exists.",
-                self.id()
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(self.id(), &connection)?;
 
         if !Recipe::exists_in_database_by_id(self.recipe_id(), connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} referenced by ingredient {} does not exist.",
-                self.recipe_id(),
-                self.id()
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Reference error",
+                format!(
+                    "The recipe {} referenced by ingredient {} does not exist.",
+                    self.recipe_id(),
+                    self.id()
+                ),
+                "The recipe referenced by the ingredient does not exist.",
+            )));
         }
 
         connection.execute(
@@ -101,19 +96,18 @@ impl Ingredient {
     }
 
     pub fn update_in_database(&self, connection: &Connection) -> Result<(), HomeworkError> {
-        if !self.exists_in_database(connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The ingredient {} does not exists.",
-                self.id()
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(self.id(), &connection)?;
 
         if !Recipe::exists_in_database_by_id(self.recipe_id(), connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} referenced by ingredient {} does not exist.",
-                self.recipe_id(),
-                self.id()
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Reference error",
+                format!(
+                    "The recipe {} referenced by ingredient {} does not exist.",
+                    self.recipe_id(),
+                    self.id()
+                ),
+                "The recipe referenced by the ingredient does not exist.",
+            )));
         }
 
         connection.execute(
@@ -128,12 +122,8 @@ impl Ingredient {
         id: Uuid,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Ingredient::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The ingredient {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
+
 
         connection.execute("DELETE FROM ingredient WHERE id = ?1", params![id])?;
         Ok(())
@@ -145,6 +135,28 @@ impl Ingredient {
     ) -> Result<bool, rusqlite::Error> {
         let mut stmt = connection.prepare("SELECT 1 FROM ingredient WHERE id = ?1")?;
         stmt.exists([ingredient_id])
+    }
+
+    /// Automatically throws a ```Not Found``` if the entry does not exist.
+    /// Returns an ```Ok``` otherwise.
+    /// 
+    /// Parameters
+    /// 
+    /// * ```ingredient_id``` - the ID of the ingredient
+    /// * ```connection``` - the database connection
+    pub fn exists_in_database_by_id_throw_not_found(
+        ingredient_id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        if !Self::exists_in_database_by_id(ingredient_id, &connection)? {
+            Err(HomeworkError::NotFoundError(InternalError::new(
+                "Ingredient not found",
+                format!("The ingredient {} does not exist.", ingredient_id),
+                "The ingredient does not exist.",
+            )))
+        } else {
+            Ok(())
+        }
     }
 }
 

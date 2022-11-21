@@ -3,6 +3,8 @@ use rusqlite::{Connection, Row};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::application::error::{HomeworkError, InternalError};
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Attachment {
@@ -22,6 +24,28 @@ impl Attachment {
     ) -> Result<bool, rusqlite::Error> {
         let mut stmt = connection.prepare("SELECT 1 FROM attachment WHERE id = ?1")?;
         stmt.exists([id])
+    }
+
+    /// Automatically throws a ```Not Found``` if the entry does not exist.
+    /// Returns an ```Ok``` otherwise.
+    /// 
+    /// Parameters
+    /// 
+    /// * ```attachment_id``` - the ID of the attachment
+    /// * ```connection``` - the database connection
+    pub fn exists_in_database_by_id_throw_not_found(
+        attachment_id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        if !Self::exists_in_database_by_id(attachment_id, &connection)? {
+            Err(HomeworkError::NotFoundError(InternalError::new(
+                "Attachment not found",
+                format!("The attachment {} does not exist.", attachment_id),
+                "The attachment does not exist.",
+            )))
+        } else {
+            Ok(())
+        }
     }
 }
 

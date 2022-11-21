@@ -3,7 +3,7 @@ use rusqlite::{params, Connection, Row};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::application::error::HomeworkError;
+use crate::application::error::{HomeworkError, InternalError};
 
 use super::{attachment::Attachment, ingredient::Ingredient};
 
@@ -26,12 +26,7 @@ impl Recipe {
         recipe_id: Uuid,
         connection: &Connection,
     ) -> Result<Recipe, HomeworkError> {
-        if !Recipe::exists_in_database_by_id(recipe_id, &connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                recipe_id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(recipe_id, &connection)?;
         let mut stmt_recipe = connection
             .prepare("SELECT id, title, instructions, reference, rating, creation_time FROM recipe WHERE id = ?1")?;
         let recipe = stmt_recipe
@@ -80,12 +75,7 @@ impl Recipe {
         value: &str,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
 
         let column = StringColumns::try_from(column)?;
         connection.execute(
@@ -100,12 +90,7 @@ impl Recipe {
         value: u8,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
 
         connection.execute("UPDATE recipe SET rating = ?1 WHERE id = ?2", params![value, id])?;
         Ok(())
@@ -116,12 +101,7 @@ impl Recipe {
         tag: &str,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
 
         connection.execute(
             "INSERT INTO tag_recipe_mapping (tag, recipe_id) VALUES (?1, ?2)",
@@ -135,12 +115,7 @@ impl Recipe {
         tag: &str,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
 
         connection.execute(
             "DELETE FROM tag_recipe_mapping WHERE tag = ?1 AND recipe_id = ?2",
@@ -154,19 +129,8 @@ impl Recipe {
         attachment_id: Uuid,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(recipe_id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                recipe_id
-            ))));
-        }
-
-        if !Attachment::exists_in_database_by_id(attachment_id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The attachment {} does not exist.",
-                attachment_id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(recipe_id, &connection)?;
+        Attachment::exists_in_database_by_id_throw_not_found(attachment_id, connection)?;
 
         connection.execute(
             "INSERT INTO attachment_recipe_mapping (recipe_id, attachment_id) VALUES (?1, ?2)",
@@ -179,12 +143,7 @@ impl Recipe {
         id: Uuid,
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
-        if !Recipe::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The recipe {} does not exist.",
-                id
-            ))));
-        }
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
 
         connection.execute("DELETE FROM recipe WHERE id = ?1", params![id])?;
         Ok(())
@@ -232,6 +191,28 @@ impl Recipe {
     ) -> Result<bool, rusqlite::Error> {
         let mut stmt = connection.prepare("SELECT 1 FROM recipe WHERE id = ?1")?;
         stmt.exists([recipe_id])
+    }
+
+    /// Automatically throws a ```Not Found``` if the entry does not exist.
+    /// Returns an ```Ok``` otherwise.
+    ///
+    /// Parameters
+    ///
+    /// * ```recipe_id``` - the ID of the recipe
+    /// * ```connection``` - the database connection
+    pub fn exists_in_database_by_id_throw_not_found(
+        recipe_id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        if !Self::exists_in_database_by_id(recipe_id, &connection)? {
+            Err(HomeworkError::NotFoundError(InternalError::new(
+                "Recipe not found",
+                format!("The recipe {} does not exist.", recipe_id),
+                "The recipe does not exist.",
+            )))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -287,10 +268,11 @@ impl TryFrom<&str> for StringColumns {
             COLUMN_STRING_TITLE => Ok(StringColumns::Title),
             COLUMN_STRING_INSTRUCTIONS => Ok(StringColumns::Instructions),
             COLUMN_STRING_REFERENCE => Ok(StringColumns::Reference),
-            _ => Err(HomeworkError::NotFoundError(Some(format!(
-                "\"{}\" is not a valid value.",
-                value
-            )))),
+            _ => Err(HomeworkError::NotFoundError(InternalError::new(
+                "Invalid value",
+                format!("\"{}\" is not a valid recipe column value.", value),
+                "An invalid value was supplied.",
+            ))),
         }
     }
 }

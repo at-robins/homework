@@ -6,7 +6,7 @@ use rusqlite::{params, Connection, Row};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::application::error::HomeworkError;
+use crate::application::error::{HomeworkError, InternalError};
 
 use super::attachment::Attachment;
 
@@ -30,10 +30,11 @@ impl Payment {
         connection: &Connection,
     ) -> Result<Payment, HomeworkError> {
         if !Payment::exists_in_database_by_id(payment_id, &connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                payment_id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", payment_id),
+                "The payment does not exist.",
+            )));
         }
         connection
             .query_row_and_then("SELECT id, target, note, paid, involved, payment_type, creation_time FROM payment WHERE id = ?1",
@@ -85,10 +86,11 @@ impl Payment {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         if !Payment::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", id),
+                "The payment does not exist.",
+            )));
         }
 
         let column = StringColumns::try_from(column)?;
@@ -105,10 +107,11 @@ impl Payment {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         if !Payment::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", id),
+                "The payment does not exist.",
+            )));
         }
 
         connection.execute(
@@ -124,10 +127,11 @@ impl Payment {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         if !Payment::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", id),
+                "The payment does not exist.",
+            )));
         }
 
         connection.execute(
@@ -143,17 +147,19 @@ impl Payment {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         if !Payment::exists_in_database_by_id(payment_id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                payment_id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", payment_id),
+                "The payment does not exist.",
+            )));
         }
 
         if !Attachment::exists_in_database_by_id(attachment_id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The attachment {} does not exist.",
-                attachment_id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Attachment not found",
+                format!("The payment {} does not exist.", attachment_id),
+                "The attachment does not exist.",
+            )));
         }
 
         connection.execute(
@@ -168,10 +174,11 @@ impl Payment {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         if !Payment::exists_in_database_by_id(id, connection)? {
-            return Err(HomeworkError::NotFoundError(Some(format!(
-                "The payment {} does not exist.",
-                id
-            ))));
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Payment not found",
+                format!("The payment {} does not exist.", id),
+                "The payment does not exist.",
+            )));
         }
 
         connection.execute("DELETE FROM payment WHERE id = ?1", params![id])?;
@@ -274,10 +281,11 @@ impl TryFrom<&str> for StringColumns {
         match value {
             COLUMN_STRING_TARGET => Ok(StringColumns::Target),
             COLUMN_STRING_NOTE => Ok(StringColumns::Note),
-            _ => Err(HomeworkError::NotFoundError(Some(format!(
-                "\"{}\" is not a valid value.",
-                value
-            )))),
+            _ => Err(HomeworkError::NotFoundError(InternalError::new(
+                "Invalid value",
+                format!("\"{}\" is not a valid payment column value.", value),
+                "An invalid value was supplied.",
+            ))),
         }
     }
 }
