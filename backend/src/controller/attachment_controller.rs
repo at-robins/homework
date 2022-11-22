@@ -1,8 +1,17 @@
-use std::{fs::File, io::Write, path::Path, sync::Arc};
+use std::{
+    fs::File,
+    io::{Cursor, Write},
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
-use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{
+    http::header::ContentType,
+    web::{self, Bytes},
+    HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
+};
 use futures_util::TryStreamExt as _;
 use rusqlite::params;
 use uuid::Uuid;
@@ -85,11 +94,7 @@ pub async fn delete_attachment(
     let conn = Configuration::database_connection()?;
 
     // Get the attachment file path.
-    let app_config = request
-        .app_data::<Arc<Configuration>>()
-        .expect("The configuration must be accessible.");
-    let mut file_path = app_config.application_attachments_folder_path();
-    file_path.push(uuid.to_string());
+    let file_path = attachment_path(&request, uuid);
 
     // Remove the attachment from the disk.
     std::fs::remove_file(file_path)?;
@@ -106,12 +111,57 @@ pub async fn download_attachment(
     id: web::Path<Uuid>,
 ) -> Result<NamedFile, HomeworkError> {
     let uuid: Uuid = id.into_inner();
-    // Get the attachment file path.
+    let file_path = attachment_path(&request, uuid);
+    let file_name = attachment_file_name_from_db(uuid)?;
+    Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
+}
+
+pub async fn scale_image_attachment(
+    request: HttpRequest,
+    path: web::Path<(Uuid, u32, u32)>,
+) -> Result<HttpResponse, HomeworkError> {
+    let (uuid, width, height) = path.into_inner();
+    let image_attachment = image::io::Reader::open(attachment_path(&request, uuid))?
+        .with_guessed_format()?
+        .decode()?;
+    let thumbnail = image_attachment.thumbnail(width, height);
+    let mut webp_buffer = Cursor::new(Vec::new());
+    thumbnail
+        .into_rgba8()
+        .write_to(&mut webp_buffer, image::ImageOutputFormat::WebP)?;
+    let mime_webp = "image/webp"
+        .parse::<mime::Mime>()
+        .expect("WebP is a valid MIME type.");
+    let mut file_name = PathBuf::from(attachment_file_name_from_db(uuid)?);
+    file_name.set_extension("webp");
+
+    let disposition_file_name = format!(
+        "filename=\"{}_{}px_{}px.webp\"",
+        file_name
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .map(|name| name.to_string())
+            .unwrap_or(uuid.to_string()),
+        width,
+        height
+    );
+
+    Ok(HttpResponse::Ok()
+        .insert_header(ContentType(mime_webp))
+        .insert_header(("content-disposition", disposition_file_name))
+        .body(Bytes::from(webp_buffer.into_inner())))
+}
+
+fn attachment_path(request: &HttpRequest, uuid: Uuid) -> PathBuf {
     let app_config = request
         .app_data::<Arc<Configuration>>()
         .expect("The configuration must be accessible.");
     let mut file_path = app_config.application_attachments_folder_path();
     file_path.push(uuid.to_string());
+    file_path
+}
+
+fn attachment_file_name_from_db(uuid: Uuid) -> Result<String, HomeworkError> {
     let conn = Configuration::database_connection()?;
     let mut stmt = conn
         .prepare("SELECT id, name, creation_time FROM attachment WHERE id = ?1")
@@ -126,5 +176,5 @@ pub async fn download_attachment(
     } else {
         uuid.to_string()
     };
-    Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
+    Ok(file_name)
 }

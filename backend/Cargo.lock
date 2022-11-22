@@ -339,6 +339,7 @@ dependencies = [
  "getset",
  "image",
  "log",
+ "mime",
  "openssl",
  "rusqlite",
  "sanitize-filename",

@@ -14,6 +14,7 @@ futures-util = "0.3.25"
 getset = "0.1.2"
 image = { version = "0.24.5", features = ["webp-encoder"] }
 log = "0.4.17"
+mime = "0.3.16"
 openssl = "0.10.42"
 sanitize-filename = "0.4.0"
 serde = { version = "1.0.147", features = ["derive"] }
