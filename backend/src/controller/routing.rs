@@ -14,7 +14,7 @@ use super::{
         add_attachment_to_recipe, add_ingredient_to_recipe, add_tag_to_recipe, all_recipe_tags,
         all_recipes, change_rating, change_recipe_string_column, create_recipe, modify_ingredient,
         remove_ingredient_from_recipe, remove_recipe, remove_tag_from_recipe, single_recipe,
-    },
+    }, resources_controller::favicon,
 };
 
 async fn index() -> actix_web::Result<NamedFile> {
@@ -83,6 +83,8 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
     .route("/api/payment/{id}/tag/{tag_name}", web::delete().to(remove_tag_from_payment))
     .route("/api/payment/{id}/attachments", web::post().to(add_attachment_to_payment))
 
+    // Redirects the favicon route.
+    .route("/favicon.ico", web::get().to(favicon))
     // Registers static frontend resources. Needs to be last to not overwrite other routes.
     .service(Files::new("/", "./static_dist").show_files_listing());
 }
