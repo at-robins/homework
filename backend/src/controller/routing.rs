@@ -3,7 +3,7 @@ use actix_web::web::{self, ServiceConfig};
 
 use super::{
     attachment_controller::{
-        add_attachment, all_attachments, delete_attachment, download_attachment, scale_image_attachment,
+        add_attachment, all_attachments, delete_attachment, download_attachment, thumbnail_image_attachment,
     },
     payment_controller::{
         add_attachment_to_payment, add_tag_to_payment, all_payment_tags, all_payments,
@@ -40,7 +40,7 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
             .route(web::get().to(download_attachment))
             .route(web::delete().to(delete_attachment)),
     )
-    .route("/api/attachment/{id}/{width}/{height}", web::get().to(scale_image_attachment))
+    .route("/api/attachment/{id}/{width}", web::get().to(thumbnail_image_attachment))
 
     // Recipe controller routing
     .service(

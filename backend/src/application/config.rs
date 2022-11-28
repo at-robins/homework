@@ -4,6 +4,8 @@
 const DEFAULT_FOLDER_APPLICATION: &str = "application";
 /// The folder in which all attachments are stored.
 const DEFAULT_FOLDER_APPLICATION_ATTACHMENTS: &str = "attachments";
+/// The folder in which all thumbnails are stored.
+const DEFAULT_FOLDER_APPLICATION_THUMBNAILS: &str = "thumbnails";
 /// The name of the default configuration file.
 const DEFAULT_FILE_APPLICATION_CONFIGURATION: &str = "configuration";
 /// The name of the default database file.
@@ -20,6 +22,8 @@ const DEFAULT_CONFIG_SERVER_PORT: &str = "8080";
 const UUID_CONTEXT: Context = Context::new(0);
 /// The node ID for UUID generation.
 const UUID_NODE_ID: &[u8; 6] = &[12, 21, 33, 4, 35, 116];
+/// The available thumbnail widths.
+const THUMBNAIL_WIDTHS: &[u32; 6] = &[100, 200, 400, 600, 800, 1000];
 
 use std::{
     fs::{File, OpenOptions},
@@ -42,6 +46,7 @@ pub struct Configuration {
     server_address: Option<String>,
     server_port: Option<String>,
     attachment_path: Option<String>,
+    thumbnail_path: Option<String>,
 }
 
 impl Configuration {
@@ -87,7 +92,11 @@ impl Configuration {
                 instructions    TEXT NOT NULL,                    
                 reference       TEXT NOT NULL,
                 rating          RATING NOT NULL,
-                creation_time   TEXT NOT NULL
+                thumbnail       BLOB,
+                creation_time   TEXT NOT NULL,
+                FOREIGN KEY (thumbnail) REFERENCES attachment (id) 
+                        ON UPDATE CASCADE
+                        ON DELETE SET NULL
             )",
             [],
         )?;
@@ -215,12 +224,31 @@ impl Configuration {
             if let Ok(configured_path) = PathBuf::try_from(configured_path_string) {
                 return configured_path;
             } else {
-                todo!()
+                log::warn!("{:?} is not a valid path.", self.attachment_path);
             }
         }
         let mut default_path = Configuration::application_configuration_folder_path();
         default_path.push(DEFAULT_FOLDER_APPLICATION_ATTACHMENTS);
         default_path
+    }
+
+    /// The path to the thumbnail folder.
+    pub fn application_thumbnail_folder_path(&self) -> PathBuf {
+        if let Some(configured_path_string) = self.thumbnail_path.clone() {
+            if let Ok(configured_path) = PathBuf::try_from(configured_path_string) {
+                return configured_path;
+            } else {
+                log::warn!("{:?} is not a valid path.", self.thumbnail_path);
+            }
+        }
+        let mut default_path = Configuration::application_configuration_folder_path();
+        default_path.push(DEFAULT_FOLDER_APPLICATION_THUMBNAILS);
+        default_path
+    }
+
+    /// The available thumbnail widths.
+    pub fn thumbnail_widths() -> &'static [u32; 6] {
+        THUMBNAIL_WIDTHS
     }
 
     /// Returns the address of the server.
@@ -249,6 +277,7 @@ impl Default for Configuration {
             server_address: None,
             server_port: None,
             attachment_path: None,
+            thumbnail_path: None,
         }
     }
 }

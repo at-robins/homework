@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{Cursor, Write},
+    io::Write,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -8,8 +8,7 @@ use std::{
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
 use actix_web::{
-    http::header::ContentType,
-    web::{self, Bytes},
+    web::{self},
     HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
 };
 use futures_util::TryStreamExt as _;
@@ -17,7 +16,10 @@ use rusqlite::params;
 use uuid::Uuid;
 
 use crate::{
-    application::{config::Configuration, error::HomeworkError},
+    application::{
+        config::Configuration,
+        error::{HomeworkError, InternalError},
+    },
     entity::attachment::Attachment,
 };
 
@@ -116,40 +118,60 @@ pub async fn download_attachment(
     Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
 }
 
-pub async fn scale_image_attachment(
+/// Return the thumbnail with the specified width for the specified image attachment.
+pub async fn thumbnail_image_attachment(
     request: HttpRequest,
-    path: web::Path<(Uuid, u32, u32)>,
-) -> Result<HttpResponse, HomeworkError> {
-    let (uuid, width, height) = path.into_inner();
-    let image_attachment = image::io::Reader::open(attachment_path(&request, uuid))?
+    path: web::Path<(Uuid, u32)>,
+) -> Result<NamedFile, HomeworkError> {
+    let (uuid, width) = path.into_inner();
+    if !Configuration::thumbnail_widths().contains(&width) {
+        return Err(HomeworkError::BadRequestError(InternalError::new(
+            "Unsupported thumbnail size",
+            format!(
+                "The requested thumbnail size of {}px is not supported. Supported values are: {:?}",
+                width,
+                Configuration::thumbnail_widths()
+            ),
+            "The requested thumbnail size is not supported.",
+        )));
+    }
+    let app_config = request
+        .app_data::<Arc<Configuration>>()
+        .expect("The configuration must be accessible.");
+
+    let mut thumbnail_path = app_config.application_thumbnail_folder_path();
+    std::fs::create_dir_all(&thumbnail_path)?;
+    thumbnail_path.push(format!("{}_{}.webp", uuid, width));
+    if !thumbnail_path.try_exists()? {
+        generate_thumbnail(uuid, width, Arc::clone(app_config)).await?;
+    }
+
+    Ok(NamedFile::from_file(File::open(&thumbnail_path)?, thumbnail_path)?)
+}
+
+/// Generates a thumbnail based on the specified ID and image width and writes it to
+/// a file.
+/// This method will fail if the specified ID does not belong to an image attachment.
+/// 
+/// # Parameters
+/// * `attachment_uuid` - the ID of the attachment image
+/// * `width` - the width in px of the generated thumbnail
+async fn generate_thumbnail(
+    attachment_uuid: Uuid,
+    width: u32,
+    config: Arc<Configuration>,
+) -> Result<(), HomeworkError> {
+    let mut attachment_path = config.application_attachments_folder_path();
+    attachment_path.push(attachment_uuid.to_string());
+    let image_attachment = image::io::Reader::open(attachment_path)?
         .with_guessed_format()?
         .decode()?;
-    let thumbnail = image_attachment.thumbnail(width, height);
-    let mut webp_buffer = Cursor::new(Vec::new());
-    thumbnail
-        .into_rgba8()
-        .write_to(&mut webp_buffer, image::ImageOutputFormat::WebP)?;
-    let mime_webp = "image/webp"
-        .parse::<mime::Mime>()
-        .expect("WebP is a valid MIME type.");
-    let mut file_name = PathBuf::from(attachment_file_name_from_db(uuid)?);
-    file_name.set_extension("webp");
-
-    let disposition_file_name = format!(
-        "filename=\"{}_{}px_{}px.webp\"",
-        file_name
-            .file_stem()
-            .and_then(|name| name.to_str())
-            .map(|name| name.to_string())
-            .unwrap_or(uuid.to_string()),
-        width,
-        height
-    );
-
-    Ok(HttpResponse::Ok()
-        .insert_header(ContentType(mime_webp))
-        .insert_header(("content-disposition", disposition_file_name))
-        .body(Bytes::from(webp_buffer.into_inner())))
+    let thumbnail = image_attachment.thumbnail(width, width).into_rgba8();
+    let mut thumbnail_path = config.application_thumbnail_folder_path();
+    thumbnail_path.push(format!("{}_{}.webp", attachment_uuid, width));
+    web::block(move || thumbnail.save_with_format(thumbnail_path, image::ImageFormat::WebP))
+        .await??;
+    Ok(())
 }
 
 fn attachment_path(request: &HttpRequest, uuid: Uuid) -> PathBuf {
