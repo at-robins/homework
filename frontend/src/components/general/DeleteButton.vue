@@ -48,6 +48,8 @@ const clickTimer: Ref<number | null> = ref(null);
 const startClickedMilliseconds: Ref<number | null> = ref(null);
 const percentage = ref(0.0);
 const MAX_CLICK_TIME = 1000.0;
+const UPDATE_INTERVALL = 100.0;
+const DELETE_DELAY = 500.0;
 
 function endHovering() {
   if (clickTimer.value !== null) {
@@ -80,7 +82,7 @@ function startClicking() {
     startClickedMilliseconds.value = performance.now();
     isClicking.value = true;
     percentage.value = 0.0;
-    clickTimer.value = setTimeout(updateClicking, 100);
+    clickTimer.value = setTimeout(updateClicking, UPDATE_INTERVALL);
   }
 }
 
@@ -95,12 +97,23 @@ function updateClicking() {
       performance.now() - startClickedMilliseconds.value;
     if (millisecondsClicked >= MAX_CLICK_TIME) {
       percentage.value = 100.0;
-      clickTimer.value = null;
-      emit("deletionConfirmed");
+      clickTimer.value = setTimeout(confirmDeletion, DELETE_DELAY);
     } else {
       percentage.value = 100.0 * (millisecondsClicked / MAX_CLICK_TIME);
-      clickTimer.value = setTimeout(updateClicking, 100);
+      clickTimer.value = setTimeout(updateClicking, UPDATE_INTERVALL);
     }
+  }
+}
+
+function confirmDeletion() {
+  clickTimer.value = null;
+  if (
+    isHovering.value &&
+    isClicking.value &&
+    startClickedMilliseconds.value != null &&
+    !props.loading
+  ) {
+    emit("deletionConfirmed");
   }
 }
 </script>
