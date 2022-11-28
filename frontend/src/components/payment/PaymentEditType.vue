@@ -134,7 +134,7 @@ function updateType() {
   const formData = JSON.stringify(typeModel.value);
   const config = {
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
   };
   axios

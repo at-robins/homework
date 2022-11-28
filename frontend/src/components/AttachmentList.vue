@@ -119,7 +119,7 @@ function uploadAttachment(value: File | null) {
     formData.append("file", value);
     const config = {
       headers: {
-        "content-type": "multipart/form-data",
+        "Content-Type": "multipart/form-data",
       },
     };
     axios

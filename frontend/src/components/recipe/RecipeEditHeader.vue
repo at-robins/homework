@@ -125,7 +125,7 @@ function updateRating(newRating: number) {
   const formData = JSON.stringify(newRating);
   const config = {
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
   };
   axios
@@ -144,7 +144,7 @@ function updateTitle() {
   const formData = JSON.stringify(titleModel.value);
   const config = {
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
   };
   axios
@@ -164,7 +164,7 @@ function updateReference() {
   const formData = JSON.stringify(referenceModel.value);
   const config = {
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
   };
   axios

@@ -65,7 +65,7 @@ function addTag() {
     const formData = JSON.stringify(addTagModel.value.trim());
     const config = {
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
     };
     axios

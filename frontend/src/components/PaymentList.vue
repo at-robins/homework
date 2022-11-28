@@ -176,7 +176,7 @@ function removeSelectedPayments() {
     const formData = JSON.stringify(currentlySelected);
     const config = {
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
     };
     axios

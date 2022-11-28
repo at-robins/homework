@@ -100,7 +100,7 @@ function uploadAttachment(value: File | null) {
     let generatedAttachmentId: string;
     const config = {
       headers: {
-        "content-type": "multipart/form-data",
+        "Content-Type": "multipart/form-data",
       },
     };
     axios
@@ -110,7 +110,7 @@ function uploadAttachment(value: File | null) {
         const formDataReference = JSON.stringify(generatedAttachmentId);
         const configReference = {
           headers: {
-            "content-type": "applocation/json",
+            "Content-Type": "applocation/json",
           },
         };
         return axios.post(

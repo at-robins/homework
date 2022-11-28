@@ -238,7 +238,7 @@ function addIngredient() {
     const formData = JSON.stringify(createdIngredient);
     const config = {
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
     };
     axios
@@ -287,7 +287,7 @@ function updateIngredient() {
       const formData = JSON.stringify(updatedIngredient);
       const config = {
         headers: {
-          "content-type": "application/json",
+          "Content-Type": "application/json",
         },
       };
       axios

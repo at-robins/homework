@@ -57,7 +57,7 @@ function updateTarget() {
   const formData = JSON.stringify(targetModel.value);
   const config = {
     headers: {
-      "content-type": "application/json",
+      "Content-Type": "application/json",
     },
   };
   axios
