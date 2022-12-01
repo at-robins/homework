@@ -152,7 +152,8 @@ pub async fn thumbnail_image_attachment(
 /// Generates a thumbnail based on the specified ID and image width and writes it to
 /// a file.
 /// This method will fail if the specified ID does not belong to an image attachment.
-/// 
+/// If a width of `0` is specified the original image dimensions are used.
+///
 /// # Parameters
 /// * `attachment_uuid` - the ID of the attachment image
 /// * `width` - the width in px of the generated thumbnail
@@ -166,7 +167,11 @@ async fn generate_thumbnail(
     let image_attachment = image::io::Reader::open(attachment_path)?
         .with_guessed_format()?
         .decode()?;
-    let thumbnail = image_attachment.thumbnail(width, width).into_rgba8();
+    let thumbnail = if width == 0 {
+        image_attachment
+    } else {
+        image_attachment.thumbnail(width, width)
+    }.into_rgba8();
     let mut thumbnail_path = config.application_thumbnail_folder_path();
     thumbnail_path.push(format!("{}_{}.webp", attachment_uuid, width));
     web::block(move || thumbnail.save_with_format(thumbnail_path, image::ImageFormat::WebP))

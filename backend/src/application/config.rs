@@ -23,7 +23,7 @@ const UUID_CONTEXT: Context = Context::new(0);
 /// The node ID for UUID generation.
 const UUID_NODE_ID: &[u8; 6] = &[12, 21, 33, 4, 35, 116];
 /// The available thumbnail widths.
-const THUMBNAIL_WIDTHS: &[u32; 6] = &[100, 200, 400, 600, 800, 1000];
+const THUMBNAIL_WIDTHS: &[u32; 7] = &[0, 100, 200, 400, 600, 800, 1000];
 
 use std::{
     fs::{File, OpenOptions},
@@ -249,7 +249,7 @@ impl Configuration {
     }
 
     /// The available thumbnail widths.
-    pub fn thumbnail_widths() -> &'static [u32; 6] {
+    pub fn thumbnail_widths() -> &'static [u32; 7] {
         THUMBNAIL_WIDTHS
     }
 

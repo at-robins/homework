@@ -1,4 +1,4 @@
-import type { PaymentType, Recipe } from "./types";
+import type { Attachment, PaymentType, Recipe } from "./types";
 import { DateTime } from "luxon";
 
 /**
@@ -20,25 +20,51 @@ export function equality_shallow_object(
  * an image file.
  */
 export function isImage(fileName: string): boolean {
+  return isBitmap(fileName) || isVectorGraphic(fileName);
+}
+
+/**
+ * Checks if the specified file name corresponds to
+ * a bitmap image file.
+ */
+export function isBitmap(fileName: string): boolean {
   const lowercaseFileName = fileName.toLocaleLowerCase();
   return (
     lowercaseFileName.endsWith(".png") ||
     lowercaseFileName.endsWith(".jpg") ||
     lowercaseFileName.endsWith(".jpeg") ||
-    lowercaseFileName.endsWith(".svg")
+    lowercaseFileName.endsWith(".webp") ||
+    lowercaseFileName.endsWith(".tif") ||
+    lowercaseFileName.endsWith(".tiff")
   );
 }
 
 /**
- * Returns the main image URL for a recipe.
+ * Checks if the specified file name corresponds to
+ * a vector graphics file.
  */
-export function getRecipeImageUrl(recipe: Recipe): string {
-  const imageAttachment = recipe.attachments.find((attachment) =>
-    isImage(attachment.name)
-  );
-  return imageAttachment
-    ? "/api/attachment/" + imageAttachment.id
-    : "/icon_recipe.svg";
+export function isVectorGraphic(fileName: string): boolean {
+  const lowercaseFileName = fileName.toLocaleLowerCase();
+  return lowercaseFileName.endsWith(".svg");
+}
+
+/**
+ * Returns the URL to the thumbnail attachment.
+ * 
+ * @param attachment the thumbnail attachment to return the URL to
+ */
+export function getAttachmentThumbnailUrl(
+  attachment: Attachment | null | undefined
+): string {
+  if (!attachment) {
+    return "/icon_recipe.svg";
+  } else {
+    let attachmentUrl = "/api/attachment/" + attachment.id;
+    if (isBitmap(attachment.name)) {
+      attachmentUrl = attachmentUrl + "/0";
+    }
+    return attachmentUrl;
+  }
 }
 
 export function getInitialPaymentDateAsUTCString(
