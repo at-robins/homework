@@ -11,6 +11,7 @@ export type Recipe = {
   reference: string;
   rating: number;
   tags: Array<string>;
+  thumbnail: Attachment | null | undefined;
   attachments: Array<Attachment>;
   ingredients: Array<Ingredient>;
   creationTime: string;

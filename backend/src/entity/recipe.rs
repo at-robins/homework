@@ -15,6 +15,7 @@ pub struct Recipe {
     instructions: String,
     reference: String,
     rating: u8,
+    thumbnail: Option<Attachment>,
     tags: Vec<String>,
     attachments: Vec<Attachment>,
     ingredients: Vec<Ingredient>,
@@ -185,6 +186,28 @@ impl Recipe {
         Ok(attachments)
     }
 
+    pub fn thumbnail_by_id(
+        recipe_id: Uuid,
+        connection: &Connection,
+    ) -> Result<Option<Attachment>, rusqlite::Error> {
+        let mut attachment_stmt = connection.prepare(
+            "
+                SELECT id, name, creation_time 
+                FROM attachment 
+                WHERE id = (
+                    SELECT thumbnail FROM recipe WHERE id = ?1
+                )",
+        )?;
+        let attachment_option =
+            attachment_stmt.query_map([recipe_id], |row| Ok(Attachment::try_from(row)?))?.next();
+
+        if attachment_option.is_some() {
+            Ok(Some(attachment_option.unwrap()?))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn exists_in_database_by_id(
         recipe_id: Uuid,
         connection: &Connection,
@@ -229,6 +252,7 @@ impl TryFrom<(&Row<'_>, &Connection)> for Recipe {
             reference: row.get(3)?,
             rating: row.get(4)?,
             tags: Recipe::tags_by_id(id, connection)?,
+            thumbnail: Recipe::thumbnail_by_id(id, connection)?,
             attachments: Recipe::attachments_by_id(id, connection)?,
             ingredients: Ingredient::select_from_database_by_recipe_id(id, connection)?,
             creation_time: row.get(5)?,

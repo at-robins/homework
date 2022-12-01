@@ -72,7 +72,9 @@ impl Configuration {
 
     /// Opens a database connection if possible.
     pub fn database_connection() -> Result<Connection, HomeworkError> {
-        Ok(Connection::open(Configuration::application_database_file_path())?)
+        let connection = Connection::open(Configuration::application_database_file_path())?;
+        connection.execute("PRAGMA foreign_keys = ON;", [])?;
+        Ok(connection)
     }
 
     pub fn initialise_database() -> Result<(), HomeworkError> {
@@ -92,8 +94,8 @@ impl Configuration {
                 instructions    TEXT NOT NULL,                    
                 reference       TEXT NOT NULL,
                 rating          RATING NOT NULL,
-                thumbnail       BLOB,
                 creation_time   TEXT NOT NULL,
+                thumbnail       BLOB,
                 FOREIGN KEY (thumbnail) REFERENCES attachment (id) 
                         ON UPDATE CASCADE
                         ON DELETE SET NULL
