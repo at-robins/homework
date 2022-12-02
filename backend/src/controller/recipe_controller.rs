@@ -103,6 +103,17 @@ pub async fn add_attachment_to_recipe(
     Ok(HttpResponse::Created().finish())
 }
 
+pub async fn set_thumbnail_for_recipe(
+    attachment: web::Json<Option<Uuid>>,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponse, HomeworkError> {
+    let uuid_recipe = path.into_inner();
+    let uuid_attachment = attachment.into_inner();
+    let conn = Configuration::database_connection()?;
+    Recipe::update_in_database_thumbnail(uuid_recipe, uuid_attachment, &conn)?;
+    Ok(HttpResponse::Ok().finish())
+}
+
 pub async fn add_ingredient_to_recipe(
     ingredient: web::Json<Ingredient>,
     path: web::Path<Uuid>,

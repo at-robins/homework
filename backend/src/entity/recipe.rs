@@ -86,6 +86,26 @@ impl Recipe {
         Ok(())
     }
 
+    pub fn update_in_database_thumbnail(
+        id: Uuid,
+        attachment_id: Option<Uuid>,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
+
+        if let Some(thumbnail_id) = attachment_id {
+            Attachment::exists_in_database_by_id_throw_not_found(thumbnail_id, &connection)?;
+            connection.execute(
+                "UPDATE recipe SET thumbnail = ?1 WHERE id = ?2",
+                params![thumbnail_id, id],
+            )?;
+        } else {
+            connection.execute("UPDATE recipe SET thumbnail = NULL WHERE id = ?1", params![id])?;
+        }
+
+        Ok(())
+    }
+
     pub fn update_in_database_rating(
         id: Uuid,
         value: u8,
@@ -198,8 +218,9 @@ impl Recipe {
                     SELECT thumbnail FROM recipe WHERE id = ?1
                 )",
         )?;
-        let attachment_option =
-            attachment_stmt.query_map([recipe_id], |row| Ok(Attachment::try_from(row)?))?.next();
+        let attachment_option = attachment_stmt
+            .query_map([recipe_id], |row| Ok(Attachment::try_from(row)?))?
+            .next();
 
         if attachment_option.is_some() {
             Ok(Some(attachment_option.unwrap()?))
