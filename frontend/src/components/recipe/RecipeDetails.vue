@@ -17,7 +17,7 @@
 
       <q-separator />
 
-      <q-card-section horizontal class="row">
+      <q-card-section horizontal class="row" style="justify-content: center">
         <q-carousel
           v-model="imageSlideModel"
           animated
@@ -25,39 +25,46 @@
           navigation
           infinite
           swipeable
-          class="full-width"
+          class="col-xs-12 col-lg-6"
         >
           <q-carousel-slide
             v-for="(attachment, index) in imageAttachments"
             :key="attachment.id"
             :name="index"
-            :img-src="getImageAttachmentUrl(attachment)"
+            class="column no-wrap"
           >
-            <q-btn
-              round
-              dense
-              text-color="white"
-              :icon="
-                isAttachmentThumbnail(attachment)
-                  ? 'bookmark_added'
-                  : 'bookmark'
-              "
-              @click="setThumbnail(attachment)"
-              :disable="isAttachmentThumbnail(attachment)"
-              :loading="isSettingThumbnail"
-            >
-              <q-tooltip>
-                <div v-if="!thumbnailErrorMessage">
-                  <div v-if="isAttachmentThumbnail(attachment)">
-                    Dieses Bild wird als Vorschaubild verwendet.
+            <q-img
+              class="rounded-borders col-12"
+              :src="getImageAttachmentUrl(attachment)"
+              fit="contain"
+            />
+            <div class="absolute q-pa-sm">
+              <q-btn
+                round
+                dense
+                text-color="white"
+                :icon="
+                  isAttachmentThumbnail(attachment)
+                    ? 'bookmark_added'
+                    : 'bookmark'
+                "
+                @click="setThumbnail(attachment)"
+                :disable="isAttachmentThumbnail(attachment)"
+                :loading="isSettingThumbnail"
+              >
+                <q-tooltip>
+                  <div v-if="!thumbnailErrorMessage">
+                    <div v-if="isAttachmentThumbnail(attachment)">
+                      Dieses Bild wird als Vorschaubild verwendet.
+                    </div>
+                    <div v-else>Setzen Sie dieses Bild als Vorschaubild.</div>
                   </div>
-                  <div v-else>Setzen Sie dieses Bild als Vorschaubild.</div>
-                </div>
-                <div v-else>
-                  {{ thumbnailErrorMessage }}
-                </div>
-              </q-tooltip>
-            </q-btn>
+                  <div v-else>
+                    {{ thumbnailErrorMessage }}
+                  </div>
+                </q-tooltip>
+              </q-btn>
+            </div>
           </q-carousel-slide>
         </q-carousel>
       </q-card-section>
