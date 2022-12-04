@@ -61,7 +61,6 @@ watch([nameModel, tagModel, ingredientModel], () => {
   emit("updatedFilter", matchingRecipes());
 });
 
-
 function matchingRecipes(): Recipe[] {
   let filteredRecipes = props.recipes;
   if (nameModel.value) {

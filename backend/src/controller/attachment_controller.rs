@@ -92,14 +92,32 @@ pub async fn delete_attachment(
     id: web::Path<Uuid>,
 ) -> Result<HttpResponseBuilder, HomeworkError> {
     let uuid: Uuid = id.into_inner();
-    // Open a databse connection first so the file is not deleted in case of connection errors.
+    // Open a databse connection first so the file is not deleted in case of connection errors
+    // and check that the attachmnet indeed exists.
     let conn = Configuration::database_connection()?;
+    Attachment::exists_in_database_by_id_throw_not_found(uuid, &conn)?;
+
+    // Access the configuration.
+    let app_config = request
+        .app_data::<Arc<Configuration>>()
+        .expect("The configuration must be accessible.");
+
 
     // Get the attachment file path.
     let file_path = attachment_path(&request, uuid);
 
     // Remove the attachment from the disk.
     std::fs::remove_file(file_path)?;
+
+    // Remove potential thumbnails from the disk.
+    for entry in std::fs::read_dir(app_config.application_thumbnail_folder_path())? {
+        let entry = entry?;
+        if let Some(file_name) = entry.file_name().to_str() {
+            if file_name.contains(&uuid.to_string()) {
+                std::fs::remove_file(entry.path())?;
+            }
+        }
+    }
 
     // Remove the attachment from the database.
     conn.execute("DELETE FROM attachment WHERE id = ?1", params![uuid,])?;
@@ -171,7 +189,8 @@ async fn generate_thumbnail(
         image_attachment
     } else {
         image_attachment.thumbnail(width, width)
-    }.into_rgba8();
+    }
+    .into_rgba8();
     let mut thumbnail_path = config.application_thumbnail_folder_path();
     thumbnail_path.push(format!("{}_{}.webp", attachment_uuid, width));
     web::block(move || thumbnail.save_with_format(thumbnail_path, image::ImageFormat::WebP))
