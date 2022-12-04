@@ -191,6 +191,7 @@ function setThumbnail(attachment: Attachment | null) {
 function updateAttachments(newAttachments: Array<Attachment>) {
   if (recipe.value) {
     recipe.value.attachments = newAttachments;
+    imageSlideModel.value = 0;
     nextTick(autoSetThumbnail);
   }
 }

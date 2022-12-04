@@ -19,7 +19,10 @@
     <q-list bordered class="rounded-borders" style="max-width: 600px">
       <q-item-label header>Anhänge</q-item-label>
 
-      <div v-for="(attachment, index) in attachments" :key="attachment.id">
+      <div
+        v-for="(attachment, index) in recipe.attachments"
+        :key="attachment.id"
+      >
         <q-item>
           <q-item-section avatar top>
             <q-icon name="account_tree" color="black" size="34px" />
@@ -48,7 +51,7 @@
           </q-item-section>
         </q-item>
 
-        <q-separator spaced v-if="index + 1 < attachments.length" />
+        <q-separator spaced v-if="index + 1 < recipe.attachments.length" />
       </div>
       <q-item v-if="!!loadAttachmentsErrorMessage">
         <q-item-section avatar top>
@@ -68,7 +71,7 @@
 import type { Attachment } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { ref, watch, type Ref } from "vue";
+import { ref, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
 
 const emit = defineEmits<{
@@ -79,17 +82,12 @@ const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },
 });
 
-const attachments: Ref<Array<Attachment>> = ref(props.recipe.attachments);
 const fileModel: Ref<File | null> = ref(null);
 const isUploadingAttachment = ref(false);
 const isDeltingAttachment: Ref<Array<string>> = ref([]);
 const deletionErrorMessages: Ref<Map<string, string>> = ref(new Map());
 const loadAttachmentsErrorMessage = ref("");
 const uploadErrorMessage = ref("");
-
-watch(attachments, () => {
-  emit("updatedAttachments", attachments.value);
-});
 
 function uploadAttachment(value: File | null) {
   if (value) {
@@ -120,11 +118,13 @@ function uploadAttachment(value: File | null) {
         );
       })
       .then(() => {
-        attachments.value.push({
+        const attachments = props.recipe.attachments.slice();
+        attachments.push({
           id: generatedAttachmentId,
           name: value.name,
           creationTime: new Date(),
         });
+        emit("updatedAttachments", attachments);
       })
       .catch((error) => {
         uploadErrorMessage.value = error;
@@ -141,9 +141,10 @@ function deleteAttachment(id: string) {
   axios
     .delete("/api/attachment/" + id)
     .then(() => {
-      attachments.value = attachments.value.filter(
+      const attachments = props.recipe.attachments.filter(
         (attachment) => attachment.id !== id
       );
+      emit("updatedAttachments", attachments);
     })
     .catch((error) => {
       deletionErrorMessages.value.set(id, error);
