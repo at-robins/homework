@@ -1,24 +1,24 @@
 <template>
-  <div class="row wrap q-gutter-md q-pa-md">
+  <div class="row wrap q-gutter-md q-pa-md" style="justify-content: center">
     <input-filter
       v-model="nameModel"
       :options="allNames"
       label="Rezeptnamen filtern"
-      class="col-3"
+      class="col-xs-11 col-lg-3"
     />
     <input-filter
       v-model="tagModel"
       :options="allTags"
       label="Schlagwörter filtern"
       multiple
-      class="col-3"
+      class="col-xs-11 col-lg-3"
     />
     <input-filter
       v-model="ingredientModel"
       :options="allIngredients"
       label="Zutaten filtern"
       multiple
-      class="col-3"
+      class="col-xs-11 col-lg-3"
     />
   </div>
 </template>

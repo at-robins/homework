@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import type { Recipe } from "@/scripts/types";
-import { getAttachmentThumbnailUrl } from "@/scripts/utilities";
+import { getImageAttachmentUrl } from "@/scripts/utilities";
 import axios from "axios";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -34,7 +34,7 @@ const emit = defineEmits<{
 }>();
 
 const imageUrl = computed(() => {
-  return getAttachmentThumbnailUrl(props.recipe.thumbnail);
+  return getImageAttachmentUrl(props.recipe.thumbnail);
 });
 
 const thumbnailSourceSet = computed(() => {

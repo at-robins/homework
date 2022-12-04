@@ -18,32 +18,56 @@
       <q-separator />
 
       <q-card-section horizontal class="row">
-        <q-card-section class="col-4">
-          <q-carousel
-            v-model="imageSlideModel"
-            animated
-            arrows
-            navigation
-            infinite
-            swipeable
+        <q-carousel
+          v-model="imageSlideModel"
+          animated
+          arrows
+          navigation
+          infinite
+          swipeable
+          class="full-width"
+        >
+          <q-carousel-slide
+            v-for="(attachment, index) in imageAttachments"
+            :key="attachment.id"
+            :name="index"
+            :img-src="getImageAttachmentUrl(attachment)"
           >
-            <q-carousel-slide
-              v-for="(attachment, index) in imageAttachments"
-              :key="attachment.id"
-              :name="index"
-              :img-src="'/api/attachment/' + attachment.id"
-            />
-          </q-carousel>
-        </q-card-section>
+            <q-btn
+              round
+              dense
+              text-color="white"
+              :icon="
+                isAttachmentThumbnail(attachment)
+                  ? 'bookmark_added'
+                  : 'bookmark'
+              "
+              @click="setThumbnail(attachment)"
+              :disable="isAttachmentThumbnail(attachment)"
+              :loading="isSettingThumbnail"
+            >
+              <q-tooltip>
+                <div v-if="!thumbnailErrorMessage">
+                  <div v-if="isAttachmentThumbnail(attachment)">
+                    Dieses Bild wird als Vorschaubild verwendet.
+                  </div>
+                  <div v-else>Setzen Sie dieses Bild als Vorschaubild.</div>
+                </div>
+                <div v-else>
+                  {{ thumbnailErrorMessage }}
+                </div>
+              </q-tooltip>
+            </q-btn>
+          </q-carousel-slide>
+        </q-carousel>
+      </q-card-section>
 
-        <q-separator vertical />
-
-        <q-card-section class="col-8">
-          <recipe-edit-ingredients
-            :recipe="recipe"
-            @updated-ingredients="updateIngredients"
-          />
-        </q-card-section>
+      <q-card-section horizontal class="row">
+        <recipe-edit-ingredients
+          :recipe="recipe"
+          @updated-ingredients="updateIngredients"
+          class="full-width"
+        />
       </q-card-section>
 
       <q-separator />
@@ -70,13 +94,13 @@
 <script setup lang="ts">
 import type { Attachment, Ingredient, Recipe } from "@/scripts/types";
 import axios from "axios";
-import { computed, onMounted, ref, type Ref } from "vue";
+import { computed, nextTick, onMounted, ref, type Ref } from "vue";
 import RecipeEditInstructions from "./RecipeEditInstructions.vue";
 import RecipeEditHeader from "./RecipeEditHeader.vue";
 import RecipeEditTags from "./RecipeEditTags.vue";
 import RecipeEditAttachments from "./RecipeEditAttachments.vue";
 import RecipeEditIngredients from "./RecipeEditIngredients.vue";
-import { isImage } from "@/scripts/utilities";
+import { isImage, getImageAttachmentUrl } from "@/scripts/utilities";
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -84,7 +108,9 @@ const props = defineProps({
 
 const recipe: Ref<Recipe | null> = ref(null);
 const isLoadingRecipe = ref(false);
+const isSettingThumbnail = ref(false);
 const loadingErrorMessage = ref("");
+const thumbnailErrorMessage = ref("");
 const ratingModel = ref(0);
 const editorModel = ref("");
 const imageSlideModel = ref(0);
@@ -103,6 +129,19 @@ const imageAttachments = computed(() => {
   }
 });
 
+/**
+ * Auomatically sets a thumbnail if images are available and no thumbnail is currently set.
+ */
+function autoSetThumbnail() {
+  if (
+    recipe.value &&
+    !recipe.value.thumbnail &&
+    imageAttachments.value.length > 0
+  ) {
+    setThumbnail(imageAttachments.value[0]);
+  }
+}
+
 function loadRecipe() {
   isLoadingRecipe.value = true;
   loadingErrorMessage.value = "";
@@ -113,6 +152,7 @@ function loadRecipe() {
       if (recipe.value) {
         ratingModel.value = recipe.value.rating;
         editorModel.value = recipe.value.instructions;
+        autoSetThumbnail();
       }
     })
     .catch((error) => {
@@ -124,9 +164,34 @@ function loadRecipe() {
     });
 }
 
+function setThumbnail(attachment: Attachment | null) {
+  isSettingThumbnail.value = true;
+  thumbnailErrorMessage.value = "";
+  const formData = JSON.stringify(attachment ? attachment.id : null);
+  const config = {
+    headers: {
+      "Content-Type": "applocation/json",
+    },
+  };
+  axios
+    .post("/api/recipe/" + props.id + "/thumbnail", formData, config)
+    .then(() => {
+      if (recipe.value) {
+        recipe.value.thumbnail = attachment;
+      }
+    })
+    .catch((error) => {
+      thumbnailErrorMessage.value = error;
+    })
+    .finally(() => {
+      isSettingThumbnail.value = false;
+    });
+}
+
 function updateAttachments(newAttachments: Array<Attachment>) {
   if (recipe.value) {
     recipe.value.attachments = newAttachments;
+    nextTick(autoSetThumbnail);
   }
 }
 
@@ -134,6 +199,14 @@ function updateIngredients(newIngredients: Array<Ingredient>) {
   if (recipe.value) {
     recipe.value.ingredients = newIngredients;
   }
+}
+
+function isAttachmentThumbnail(attachment: Attachment): boolean {
+  return (
+    !!recipe.value &&
+    !!recipe.value.thumbnail &&
+    attachment.id == recipe.value.thumbnail.id
+  );
 }
 </script>
 <style scoped lang="scss"></style>

@@ -44,7 +44,7 @@ const availableRecipeReferences: Ref<RecipeReferences> = ref({
 });
 
 const ingredientsWithEmptyEntity = computed(() => {
-  let withEmptyEntity = [...ingredients.value];
+  const withEmptyEntity = [...ingredients.value];
   const emptyEntity: Ingredient = {
     id: "",
     amount: "",

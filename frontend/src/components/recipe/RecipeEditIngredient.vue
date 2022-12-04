@@ -1,7 +1,7 @@
 <template>
   <div v-click-away="clickOutside" class="q-pa-xs q-gutter-xs">
     <q-item class="row">
-      <q-item-section top class="col-1">
+      <q-item-section top class="col-xs-3 col-md-2 col-lg-1">
         <q-item-label
           v-if="ingredient.id && !editMode"
           class="q-mt-sm text-right"
@@ -16,7 +16,7 @@
         ></q-input>
       </q-item-section>
 
-      <q-item-section top class="col-1">
+      <q-item-section top class="col-xs-3 col-md-2 col-lg-1">
         <q-item-label v-if="ingredient.id && !editMode" class="q-mt-sm"
           ><b>{{ ingredient.unit }}</b></q-item-label
         >
@@ -27,7 +27,7 @@
         ></q-input>
       </q-item-section>
 
-      <q-item-section top class="col-8">
+      <q-item-section top class="col-xs-4 col-md-6 col-lg-8">
         <q-item-label v-if="ingredient.id && !editMode" class="q-mt-sm">
           <router-link
             v-if="ingredient.recipeReference"
@@ -224,7 +224,7 @@ function addIngredient() {
   ) {
     isCreatingOrUpdatingIngredient.value = true;
     creationOrUpdateErrorMessage.value = "";
-    let createdIngredient: Ingredient = {
+    const createdIngredient: Ingredient = {
       // This is a dummy address since the server expects a valid UUID
       // during deserialisation. It will be overwritten on the server side.
       id: "8a6e0804-2bd0-4672-b79d-d97027f9071a",
@@ -271,7 +271,7 @@ function addIngredient() {
 
 function updateIngredient() {
   if (!isCreatingOrUpdatingIngredient.value && props.ingredient.id) {
-    let updatedIngredient: Ingredient = {
+    const updatedIngredient: Ingredient = {
       id: props.ingredient.id,
       amount: amountModel.value,
       unit: unitModel.value,

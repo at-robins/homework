@@ -1,7 +1,7 @@
 <template>
   <div>
     <recipe-filter :recipes="recipes" @updated-filter="onUpdateFilter" />
-    <q-infinite-scroll @load="onScrollLoad" :offset="250">
+    <q-infinite-scroll @load="onScrollLoad" :offset="500">
       <div class="q-pa-md q-gutter-md row wrap" style="justify-content: center">
         <div
           v-for="recipe in loadedRecipes"

@@ -49,11 +49,11 @@ export function isVectorGraphic(fileName: string): boolean {
 }
 
 /**
- * Returns the URL to the thumbnail attachment.
+ * Returns the URL for displaying an image attachment.
  * 
- * @param attachment the thumbnail attachment to return the URL to
+ * @param attachment the image attachment to return the URL to
  */
-export function getAttachmentThumbnailUrl(
+export function getImageAttachmentUrl(
   attachment: Attachment | null | undefined
 ): string {
   if (!attachment) {
