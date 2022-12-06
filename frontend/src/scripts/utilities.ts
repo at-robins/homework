@@ -50,7 +50,7 @@ export function isVectorGraphic(fileName: string): boolean {
 
 /**
  * Returns the URL for displaying an image attachment.
- * 
+ *
  * @param attachment the image attachment to return the URL to
  */
 export function getImageAttachmentUrl(

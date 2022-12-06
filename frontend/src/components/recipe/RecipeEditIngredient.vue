@@ -233,7 +233,8 @@ function addIngredient() {
       text: textModel.value,
       recipeReference: recipeReferenceModel.value,
       recipeId: props.ingredient.recipeId,
-      creationTime: new Date().toUTCString(),
+      // The timestamp will be overwritten on the server side.
+      creationTime: new Date().toISOString(),
     };
     const formData = JSON.stringify(createdIngredient);
     const config = {

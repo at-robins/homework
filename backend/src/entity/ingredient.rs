@@ -73,7 +73,16 @@ impl Ingredient {
     }
 
     pub fn insert_into_database(&self, connection: &Connection) -> Result<(), HomeworkError> {
-        Self::exists_in_database_by_id_throw_not_found(self.id(), &connection)?;
+        if Self::exists_in_database_by_id(self.id(), connection)? {
+            return Err(HomeworkError::NotFoundError(InternalError::new(
+                "Ingredient already exists",
+                format!(
+                    "The ingredient {} already exists.",
+                self.id()
+                ),
+                "The ingredient already exists.",
+            )));
+        }
 
         if !Recipe::exists_in_database_by_id(self.recipe_id(), connection)? {
             return Err(HomeworkError::NotFoundError(InternalError::new(
