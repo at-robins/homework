@@ -29,7 +29,7 @@ const filteredRecipes: Ref<Array<Recipe>> = ref([]);
 const loadedRecipes: Ref<Array<Recipe>> = ref([]);
 const isLoadingRecipes = ref(false);
 const loadRecipesErrorMessage = ref("");
-const INITIALLY_LOADED_RECIPES = 10;
+const INITIALLY_LOADED_RECIPES = 15;
 const RECIPE_LOAD_BUFFER = 5;
 
 onMounted(() => {
