@@ -9,9 +9,12 @@
         <recipe-edit-ingredient
           :ingredient="ingredient"
           :available-recipe-references="availableRecipeReferences"
+          :ordering="index"
           @added-ingredient="addIngredient"
           @updated-ingredient="updateIngredient"
           @removed-ingredient="removeIngredient"
+          @move-ingredient-up="moveIngredientUp"
+          @move-ingredient-down="moveIngredientDown"
         />
         <q-separator
           spaced
@@ -26,7 +29,7 @@
 import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
-import { computed, onMounted, ref, watch, type Ref } from "vue";
+import { computed, onMounted, ref, type Ref } from "vue";
 import RecipeEditIngredient from "./RecipeEditIngredient.vue";
 
 const emit = defineEmits<{
@@ -37,14 +40,17 @@ const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },
 });
 
-const ingredients: Ref<Array<Ingredient>> = ref(props.recipe.ingredients);
 const availableRecipeReferences: Ref<RecipeReferences> = ref({
   error: "",
   references: [],
 });
 
+const ingredientsSorted = computed(() => {
+  return [...props.recipe.ingredients].sort((a, b) => a.ordering - b.ordering);
+});
+
 const ingredientsWithEmptyEntity = computed(() => {
-  const withEmptyEntity = [...ingredients.value];
+  const withEmptyEntity = [...ingredientsSorted.value];
   const emptyEntity: Ingredient = {
     id: "",
     amount: "",
@@ -52,7 +58,8 @@ const ingredientsWithEmptyEntity = computed(() => {
     text: "",
     recipeReference: null,
     recipeId: props.recipe.id,
-    creationTime: new Date().toUTCString(),
+    creationTime: new Date().toISOString(),
+    ordering: props.recipe.ingredients.length,
   };
   withEmptyEntity.push(emptyEntity);
   return withEmptyEntity;
@@ -62,34 +69,75 @@ onMounted(() => {
   loadRecipeReferences();
 });
 
-watch(
-  () => props.recipe,
-  (newValue) => {
-    ingredients.value = newValue.ingredients;
-  }
-);
-
 function addIngredient(ingredient: Ingredient) {
-  ingredients.value.push(ingredient);
-  emit("updatedIngredients", ingredients.value);
+  const extendedIngredients = [...ingredientsSorted.value];
+  extendedIngredients.push(ingredient);
+  emit("updatedIngredients", extendedIngredients);
 }
 
 function updateIngredient(updatedIngredient: Ingredient) {
-  ingredients.value = ingredients.value.map((ingredient) => {
+  const updatedIngredients = ingredientsSorted.value.map((ingredient) => {
     if (ingredient.id === updatedIngredient.id) {
       return updatedIngredient;
     } else {
       return ingredient;
     }
   });
-  emit("updatedIngredients", ingredients.value);
+  emit("updatedIngredients", updatedIngredients);
 }
 
 function removeIngredient(ingredientId: string) {
-  ingredients.value = ingredients.value.filter(
+  const cleanedIngredients = ingredientsSorted.value.filter(
     (ingredient) => ingredient.id !== ingredientId
   );
-  emit("updatedIngredients", ingredients.value);
+  updateIngredientOrder(cleanedIngredients.map((value) => value.id));
+  emit("updatedIngredients", cleanedIngredients);
+}
+
+function moveIngredientUp(ingredientId: string) {
+  const shiftedIndex = ingredientsSorted.value.findIndex(
+    (value) => value.id === ingredientId
+  );
+  if (shiftedIndex > 0) {
+    const shiftedIngredients = [...ingredientsSorted.value];
+    const shiftedElement = shiftedIngredients.splice(shiftedIndex, 1)[0];
+    shiftedIngredients.splice(shiftedIndex - 1, 0, shiftedElement);
+    shiftedIngredients.forEach((value, index) => {
+      value.ordering = index;
+    });
+    updateIngredientOrder(shiftedIngredients.map((value) => value.id));
+    emit("updatedIngredients", shiftedIngredients);
+  }
+}
+
+function moveIngredientDown(ingredientId: string) {
+  const shiftedIndex = ingredientsSorted.value.findIndex(
+    (value) => value.id === ingredientId
+  );
+  if (shiftedIndex < props.recipe.ingredients.length - 1) {
+    const shiftedIngredients = [...ingredientsSorted.value];
+    const shiftedElement = shiftedIngredients.splice(shiftedIndex, 1)[0];
+    shiftedIngredients.splice(shiftedIndex + 1, 0, shiftedElement);
+    shiftedIngredients.forEach((value, index) => {
+      value.ordering = index;
+    });
+    updateIngredientOrder(shiftedIngredients.map((value) => value.id));
+    emit("updatedIngredients", shiftedIngredients);
+  }
+}
+
+function updateIngredientOrder(orderedIngredientIds: string[]) {
+  const formData = JSON.stringify(orderedIngredientIds);
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  axios.post(
+    "/api/recipe/" + props.recipe.id + "/ingredients/ordering",
+    formData,
+    config
+  );
 }
 
 function loadRecipeReferences() {

@@ -151,6 +151,39 @@ pub async fn modify_ingredient(
     Ok(HttpResponse::Ok().finish())
 }
 
+pub async fn modify_ingredients_ordering(
+    ingredients: web::Json<Vec<Uuid>>,
+    path: web::Path<Uuid>,
+) -> Result<HttpResponse, HomeworkError> {
+    let uuid_recipe = path.into_inner();
+    let ingredient_uuids = ingredients.into_inner();
+    let conn = Configuration::database_connection()?;
+    let ingredient_uuids_recipe: Vec<Uuid> =
+        Ingredient::select_from_database_by_recipe_id(uuid_recipe, &conn)?
+            .iter()
+            .map(|ingredient| ingredient.id())
+            .collect();
+    if ingredient_uuids
+        .iter()
+        .any(|id| !ingredient_uuids_recipe.contains(id))
+    {
+        return Err(HomeworkError::BadRequestError(InternalError::new(
+            "Ingredient missmatch",
+            format!(
+            "The requested recipe {} does not contain the specified ingredients {:?}, only the following ingredients are contained: {:?} ",
+            uuid_recipe,
+            ingredient_uuids,
+            ingredient_uuids_recipe
+        ),
+            "The requested recipe does not contain the specified ingredients.",
+        )));
+    }
+    for (i, ingredient_uuid) in ingredient_uuids.iter().enumerate() {
+        Ingredient::update_ordering_by_id(i as i32, *ingredient_uuid, &conn)?;
+    }
+    Ok(HttpResponse::Ok().finish())
+}
+
 pub async fn remove_ingredient_from_recipe(
     path: web::Path<(Uuid, Uuid)>,
 ) -> Result<HttpResponse, HomeworkError> {

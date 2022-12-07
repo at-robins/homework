@@ -1,6 +1,6 @@
 <template>
   <q-card bordered class="cursor-pointer" @click="navigateToRecipe">
-    <q-img :src="imageUrl" ratio="1" :srcset="thumbnailSourceSet">
+    <q-img :src="imageUrl" ratio="1">
       <div class="absolute-bottom text-subtitle2 text-center">
         <div>
           {{ recipe.title }}
@@ -35,24 +35,6 @@ const emit = defineEmits<{
 
 const imageUrl = computed(() => {
   return getImageAttachmentUrl(props.recipe.thumbnail);
-});
-
-const thumbnailSourceSet = computed(() => {
-  return "";
-  // return (
-  //   imageUrl.value +
-  //   "/100 300w, " +
-  //   imageUrl.value +
-  //   "/200 600w, " +
-  //   imageUrl.value +
-  //   "/400 1200w, " +
-  //   imageUrl.value +
-  //   "/600 2000w, " +
-  //   imageUrl.value +
-  //   "/800 2400w," +
-  //   imageUrl.value +
-  //   "/1000 3000w"
-  // );
 });
 
 const router = useRouter();

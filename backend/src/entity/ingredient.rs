@@ -17,6 +17,7 @@ pub struct Ingredient {
     creation_time: DateTime<Utc>,
     recipe_reference: Option<Uuid>,
     recipe_id: Uuid,
+    ordering: i32,
 }
 
 impl Ingredient {
@@ -44,6 +45,10 @@ impl Ingredient {
         self.recipe_id
     }
 
+    pub fn ordering(&self) -> i32 {
+        self.ordering
+    }
+
     pub fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
@@ -58,7 +63,7 @@ impl Ingredient {
     ) -> Result<Vec<Ingredient>, rusqlite::Error> {
         let mut ingredient_stmt = connection.prepare(
             "
-                SELECT id, amount, unit, text, creation_time, recipe_reference, recipe_id
+                SELECT id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering
                 FROM ingredient
                 WHERE recipe_id = ?1",
         )?;
@@ -76,10 +81,7 @@ impl Ingredient {
         if Self::exists_in_database_by_id(self.id(), connection)? {
             return Err(HomeworkError::NotFoundError(InternalError::new(
                 "Ingredient already exists",
-                format!(
-                    "The ingredient {} already exists.",
-                self.id()
-                ),
+                format!("The ingredient {} already exists.", self.id()),
                 "The ingredient already exists.",
             )));
         }
@@ -97,8 +99,8 @@ impl Ingredient {
         }
 
         connection.execute(
-            "INSERT INTO ingredient (id, amount, unit, text, creation_time, recipe_reference, recipe_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![self.id(), self.amount(), self.unit(), self.text(), chrono::Utc::now(), self.recipe_reference(), self.recipe_id()],
+            "INSERT INTO ingredient (id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![self.id(), self.amount(), self.unit(), self.text(), chrono::Utc::now(), self.recipe_reference(), self.recipe_id(), self.ordering()],
         )?;
 
         Ok(())
@@ -120,9 +122,22 @@ impl Ingredient {
         }
 
         connection.execute(
-            "UPDATE ingredient SET amount = ?1, unit = ?2, text = ?3, recipe_reference = ?4 WHERE id = ?5",
-            params![self.amount(), self.unit(), self.text(), self.recipe_reference(), self.id()],
+            "UPDATE ingredient SET amount = ?1, unit = ?2, text = ?3, recipe_reference = ?4, ordering = ?5 WHERE id = ?6",
+            params![self.amount(), self.unit(), self.text(), self.recipe_reference(), self.ordering(), self.id()],
         )?;
+
+        Ok(())
+    }
+
+    pub fn update_ordering_by_id(
+        ordering: i32,
+        id: Uuid,
+        connection: &Connection,
+    ) -> Result<(), HomeworkError> {
+        Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
+
+        connection
+            .execute("UPDATE ingredient SET ordering = ?1 WHERE id = ?2", params![ordering, id])?;
 
         Ok(())
     }
@@ -132,7 +147,6 @@ impl Ingredient {
         connection: &Connection,
     ) -> Result<(), HomeworkError> {
         Self::exists_in_database_by_id_throw_not_found(id, &connection)?;
-
 
         connection.execute("DELETE FROM ingredient WHERE id = ?1", params![id])?;
         Ok(())
@@ -148,9 +162,9 @@ impl Ingredient {
 
     /// Automatically throws a ```Not Found``` if the entry does not exist.
     /// Returns an ```Ok``` otherwise.
-    /// 
+    ///
     /// Parameters
-    /// 
+    ///
     /// * ```ingredient_id``` - the ID of the ingredient
     /// * ```connection``` - the database connection
     pub fn exists_in_database_by_id_throw_not_found(
@@ -181,6 +195,7 @@ impl TryFrom<&Row<'_>> for Ingredient {
             creation_time: row.get(4)?,
             recipe_reference: row.get(5)?,
             recipe_id: row.get(6)?,
+            ordering: row.get(7)?,
         })
     }
 }

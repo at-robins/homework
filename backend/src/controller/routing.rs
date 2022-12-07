@@ -13,7 +13,7 @@ use super::{
     recipe_controller::{
         add_attachment_to_recipe, add_ingredient_to_recipe, add_tag_to_recipe, all_recipe_tags,
         all_recipes, change_rating, change_recipe_string_column, create_recipe, modify_ingredient,
-        remove_ingredient_from_recipe, remove_recipe, remove_tag_from_recipe, single_recipe, set_thumbnail_for_recipe,
+        remove_ingredient_from_recipe, remove_recipe, remove_tag_from_recipe, single_recipe, set_thumbnail_for_recipe, modify_ingredients_ordering,
     }, resources_controller::favicon,
 };
 
@@ -65,6 +65,7 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
         .route(web::post().to(add_ingredient_to_recipe))
         .route(web::patch().to(modify_ingredient))
     )
+    .route("/api/recipe/{id}/ingredients/ordering", web::post().to(modify_ingredients_ordering))
     .route("/api/recipe/{recipe_id}/ingredient/{ingredient_id}", web::delete().to(remove_ingredient_from_recipe))
 
     // Payment controller routing

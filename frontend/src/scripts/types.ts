@@ -25,6 +25,7 @@ export type Ingredient = {
   recipeReference: string | null | undefined;
   recipeId: string;
   creationTime: string;
+  ordering: number;
 };
 
 export type RecipeReferences = {

@@ -73,7 +73,49 @@
           <q-btn
             v-show="ingredient.id && !editMode"
             class="gt-xs"
-            size="12px"
+            size="sm"
+            flat
+            dense
+            round
+            icon="arrow_drop_up"
+            :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
+            :loading="isCreatingOrUpdatingIngredient"
+            @click="clickUpButton"
+          >
+            <q-tooltip>
+              <div v-if="!creationOrUpdateErrorMessage">
+                Zutat nach oben verschieben
+              </div>
+              <div v-else>
+                {{ creationOrUpdateErrorMessage }}
+              </div>
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-show="ingredient.id && !editMode"
+            class="gt-xs"
+            size="sm"
+            flat
+            dense
+            round
+            icon="arrow_drop_down"
+            :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
+            :loading="isCreatingOrUpdatingIngredient"
+            @click="clickDownButton"
+          >
+            <q-tooltip>
+              <div v-if="!creationOrUpdateErrorMessage">
+                Zutat nach unten verschieben
+              </div>
+              <div v-else>
+                {{ creationOrUpdateErrorMessage }}
+              </div>
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-show="ingredient.id && !editMode"
+            class="gt-xs"
+            size="sm"
             flat
             dense
             round
@@ -92,7 +134,7 @@
           <q-btn
             v-show="!ingredient.id || editMode"
             class="gt-xs"
-            size="12px"
+            size="sm"
             flat
             dense
             round
@@ -155,6 +197,8 @@ const emit = defineEmits<{
   (event: "addedIngredient", ingredient: Ingredient): void;
   (event: "updatedIngredient", ingredient: Ingredient): void;
   (event: "removedIngredient", id: string): void;
+  (event: "moveIngredientUp", id: string): void;
+  (event: "moveIngredientDown", id: string): void;
 }>();
 
 const props = defineProps({
@@ -164,6 +208,13 @@ const props = defineProps({
     required: false,
     default: () => {
       return { error: "", references: [] };
+    },
+  },
+  ordering: {
+    type: Number,
+    required: false,
+    default: () => {
+      return 0;
     },
   },
 });
@@ -213,6 +264,14 @@ function clickEditButton() {
   });
 }
 
+function clickUpButton() {
+  emit("moveIngredientUp", props.ingredient.id);
+}
+
+function clickDownButton() {
+  emit("moveIngredientDown", props.ingredient.id);
+}
+
 function addIngredient() {
   if (
     !isCreatingOrUpdatingIngredient.value &&
@@ -235,6 +294,7 @@ function addIngredient() {
       recipeId: props.ingredient.recipeId,
       // The timestamp will be overwritten on the server side.
       creationTime: new Date().toISOString(),
+      ordering: props.ordering,
     };
     const formData = JSON.stringify(createdIngredient);
     const config = {
@@ -280,6 +340,7 @@ function updateIngredient() {
       recipeReference: recipeReferenceModel.value,
       recipeId: props.ingredient.recipeId,
       creationTime: props.ingredient.creationTime,
+      ordering: props.ordering,
     };
     // Only update if there are changes.
     if (!equality_shallow_object(updatedIngredient, props.ingredient)) {
