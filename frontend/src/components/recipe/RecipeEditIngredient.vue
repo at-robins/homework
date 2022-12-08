@@ -82,7 +82,7 @@
             :loading="isCreatingOrUpdatingIngredient"
             @click="clickUpButton"
           >
-            <q-tooltip>
+            <q-tooltip ref="upButtonRef">
               <div v-if="!creationOrUpdateErrorMessage">
                 Zutat nach oben verschieben
               </div>
@@ -103,7 +103,7 @@
             :loading="isCreatingOrUpdatingIngredient"
             @click="clickDownButton"
           >
-            <q-tooltip>
+            <q-tooltip ref="downButtonRef">
               <div v-if="!creationOrUpdateErrorMessage">
                 Zutat nach unten verschieben
               </div>
@@ -190,6 +190,7 @@
 import type { Ingredient, RecipeReferences } from "@/scripts/types";
 import { equality_shallow_object } from "@/scripts/utilities";
 import axios from "axios";
+import type { QTooltip } from "quasar";
 import { nextTick, ref, watch, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
 
@@ -230,6 +231,8 @@ const recipeReferenceModel = ref(props.ingredient.recipeReference);
 const editMode = ref(false);
 const showRecipeReferencesMode = ref(false);
 const amountInputRef: Ref<HTMLInputElement | null> = ref(null);
+const upButtonRef: Ref<QTooltip | null> = ref(null);
+const downButtonRef: Ref<QTooltip | null> = ref(null);
 
 watch(
   () => props.ingredient,
@@ -266,10 +269,18 @@ function clickEditButton() {
 
 function clickUpButton() {
   emit("moveIngredientUp", props.ingredient.id);
+  // Manually hide the tooltip to prevent it being permanently shown after moving the target button.
+  if (upButtonRef.value) {
+    upButtonRef.value.hide();
+  }
 }
 
 function clickDownButton() {
   emit("moveIngredientDown", props.ingredient.id);
+  // Manually hide the tooltip to prevent it being permanently shown after moving the target button.
+  if (downButtonRef.value) {
+    downButtonRef.value.hide();
+  }
 }
 
 function addIngredient() {
