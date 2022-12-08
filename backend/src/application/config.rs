@@ -111,6 +111,8 @@ impl Configuration {
                     creation_time                   TEXT NOT NULL,
                     recipe_reference                BLOB,
                     recipe_id                       BLOB NOT NULL,
+                    ordering                        INTEGER NOT NULL,
+                    filter_text                     TEXT,
                     FOREIGN KEY (recipe_id) REFERENCES recipe (id) 
                         ON UPDATE CASCADE
                         ON DELETE CASCADE,

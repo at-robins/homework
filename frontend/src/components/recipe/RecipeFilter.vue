@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Recipe } from "@/scripts/types";
+import type { Ingredient, Recipe } from "@/scripts/types";
 import { computed, ref, watch, type Ref } from "vue";
 import InputFilter from "../general/InputFilter.vue";
 
@@ -53,7 +53,7 @@ const allNames = computed(() => {
 const allIngredients = computed(() => {
   const ingredients = props.recipes
     .flatMap((recipe) => recipe.ingredients)
-    .map((ingredient) => ingredient.text);
+    .map(ingredientToFilterText);
   return [...new Set<string>(ingredients)].sort();
 });
 
@@ -78,11 +78,16 @@ function matchingRecipes(): Recipe[] {
   if (filteredIngredients && filteredIngredients.length > 0) {
     filteredRecipes = filteredRecipes.filter((recipe) =>
       filteredIngredients.every((ingredient) =>
-        recipe.ingredients.map((i) => i.text).includes(ingredient)
+        recipe.ingredients.map(ingredientToFilterText).includes(ingredient)
       )
     );
   }
   return filteredRecipes;
+}
+
+/** Maps an ingredient to its filter text if present and uses its normal name if not. */
+function ingredientToFilterText(ingredient: Ingredient): string {
+  return ingredient.filterText ? ingredient.filterText : ingredient.text;
 }
 </script>
 <style scoped lang="scss"></style>

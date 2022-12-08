@@ -11,6 +11,7 @@
           v-else
           ref="amountInputRef"
           v-model="amountModel"
+          placeholder="Menge"
           input-class="text-right"
           @keydown.enter="addOrUpdateIngredient"
         ></q-input>
@@ -23,6 +24,7 @@
         <q-input
           v-else
           v-model="unitModel"
+          placeholder="Einheit"
           @keydown.enter="addOrUpdateIngredient"
         ></q-input>
       </q-item-section>
@@ -40,10 +42,17 @@
           </div>
         </q-item-label>
         <q-input
-          v-else-if="!showRecipeReferencesMode"
+          v-else-if="!showRecipeReferencesMode && !showFilterTextMode"
           v-model="textModel"
+          placeholder="Zutat"
           @keydown.enter="addOrUpdateIngredient"
-        ></q-input>
+        />
+        <q-input
+          v-else-if="!showRecipeReferencesMode && showFilterTextMode"
+          placeholder="Filtertext"
+          v-model="filterTextModel"
+          @keydown.enter="confirmFilterText"
+        />
         <q-select
           v-else
           v-model="recipeReferenceModel"
@@ -157,9 +166,32 @@
             flat
             dense
             round
+            :icon="filterTextModel ? 'filter_alt' : 'filter_alt_off'"
+            :color="showFilterTextMode ? 'primary' : 'grey'"
+            @click="clickFilterTextButton"
+          >
+            <q-tooltip>
+              <div>
+                Text setzen, welcher zum Filtern der Zutat verwendet wird
+              </div>
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-show="!ingredient.id || editMode"
+            class="gt-xs"
+            size="12px"
+            flat
+            dense
+            round
             icon="attachment"
-            :color="!availableRecipeReferences.error ? 'grey' : 'negative'"
-            @click="showRecipeReferencesMode = !showRecipeReferencesMode"
+            :color="
+              !availableRecipeReferences.error
+                ? showRecipeReferencesMode
+                  ? 'primary'
+                  : 'grey'
+                : 'negative'
+            "
+            @click="clickRecipeReferenceButton"
           >
             <q-tooltip>
               <div v-if="!availableRecipeReferences.error">
@@ -242,8 +274,10 @@ const amountModel = ref(props.ingredient.amount);
 const unitModel = ref(props.ingredient.unit);
 const textModel = ref(props.ingredient.text);
 const recipeReferenceModel = ref(props.ingredient.recipeReference);
+const filterTextModel = ref(props.ingredient.filterText);
 const editMode = ref(false);
 const showRecipeReferencesMode = ref(false);
+const showFilterTextMode = ref(false);
 const amountInputRef: Ref<HTMLInputElement | null> = ref(null);
 const upButtonRef: Ref<QTooltip | null> = ref(null);
 const downButtonRef: Ref<QTooltip | null> = ref(null);
@@ -279,6 +313,16 @@ function clickEditButton() {
       amountInputRef.value.focus();
     }
   });
+}
+
+function clickRecipeReferenceButton() {
+  showFilterTextMode.value = false;
+  showRecipeReferencesMode.value = !showRecipeReferencesMode.value;
+}
+
+function clickFilterTextButton() {
+  showRecipeReferencesMode.value = false;
+  showFilterTextMode.value = !showFilterTextMode.value;
 }
 
 function clickUpButton() {
@@ -320,6 +364,7 @@ function addIngredient() {
       // The timestamp will be overwritten on the server side.
       creationTime: new Date().toISOString(),
       ordering: props.ordering,
+      filterText: filterTextModel.value,
     };
     const formData = JSON.stringify(createdIngredient);
     const config = {
@@ -366,6 +411,7 @@ function updateIngredient() {
       recipeId: props.ingredient.recipeId,
       creationTime: props.ingredient.creationTime,
       ordering: props.ordering,
+      filterText: filterTextModel.value,
     };
     // Only update if there are changes.
     if (!equality_shallow_object(updatedIngredient, props.ingredient)) {
@@ -393,10 +439,12 @@ function updateIngredient() {
           isCreatingOrUpdatingIngredient.value = false;
           editMode.value = false;
           showRecipeReferencesMode.value = false;
+          showFilterTextMode.value = false;
         });
     } else {
       editMode.value = false;
       showRecipeReferencesMode.value = false;
+      showFilterTextMode.value = false;
     }
   }
 }
@@ -423,6 +471,11 @@ function deleteIngredient() {
         isDeltingIngredient.value = false;
       });
   }
+}
+
+function confirmFilterText() {
+  showFilterTextMode.value = false;
+  addOrUpdateIngredient();
 }
 
 function selectedRecipeReference() {

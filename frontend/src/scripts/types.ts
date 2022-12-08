@@ -26,6 +26,7 @@ export type Ingredient = {
   recipeId: string;
   creationTime: string;
   ordering: number;
+  filterText: string | null | undefined;
 };
 
 export type RecipeReferences = {

@@ -18,6 +18,7 @@ pub struct Ingredient {
     recipe_reference: Option<Uuid>,
     recipe_id: Uuid,
     ordering: i32,
+    filter_text: Option<String>,
 }
 
 impl Ingredient {
@@ -49,6 +50,10 @@ impl Ingredient {
         self.ordering
     }
 
+    pub fn filter_text(&self) -> Option<&str> {
+        self.filter_text.as_ref().map(|value| value.as_str())
+    }
+
     pub fn set_id(&mut self, id: Uuid) {
         self.id = id;
     }
@@ -63,7 +68,7 @@ impl Ingredient {
     ) -> Result<Vec<Ingredient>, rusqlite::Error> {
         let mut ingredient_stmt = connection.prepare(
             "
-                SELECT id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering
+                SELECT id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering, filter_text
                 FROM ingredient
                 WHERE recipe_id = ?1",
         )?;
@@ -99,8 +104,8 @@ impl Ingredient {
         }
 
         connection.execute(
-            "INSERT INTO ingredient (id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![self.id(), self.amount(), self.unit(), self.text(), chrono::Utc::now(), self.recipe_reference(), self.recipe_id(), self.ordering()],
+            "INSERT INTO ingredient (id, amount, unit, text, creation_time, recipe_reference, recipe_id, ordering, filter_text) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![self.id(), self.amount(), self.unit(), self.text(), chrono::Utc::now(), self.recipe_reference(), self.recipe_id(), self.ordering(), self.filter_text()],
         )?;
 
         Ok(())
@@ -122,8 +127,8 @@ impl Ingredient {
         }
 
         connection.execute(
-            "UPDATE ingredient SET amount = ?1, unit = ?2, text = ?3, recipe_reference = ?4, ordering = ?5 WHERE id = ?6",
-            params![self.amount(), self.unit(), self.text(), self.recipe_reference(), self.ordering(), self.id()],
+            "UPDATE ingredient SET amount = ?1, unit = ?2, text = ?3, recipe_reference = ?4, ordering = ?5, filter_text = ?6 WHERE id = ?7",
+            params![self.amount(), self.unit(), self.text(), self.recipe_reference(), self.ordering(), self.filter_text(), self.id()],
         )?;
 
         Ok(())
@@ -196,6 +201,7 @@ impl TryFrom<&Row<'_>> for Ingredient {
             recipe_reference: row.get(5)?,
             recipe_id: row.get(6)?,
             ordering: row.get(7)?,
+            filter_text: row.get(8)?,
         })
     }
 }

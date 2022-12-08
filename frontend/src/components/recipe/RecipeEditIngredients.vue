@@ -62,6 +62,7 @@ const ingredientsWithEmptyEntity = computed(() => {
     recipeId: props.recipe.id,
     creationTime: new Date().toISOString(),
     ordering: props.recipe.ingredients.length,
+    filterText: null,
   };
   withEmptyEntity.push(emptyEntity);
   return withEmptyEntity;
