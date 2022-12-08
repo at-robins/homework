@@ -50,16 +50,17 @@ const percentage = ref(0.0);
 const MAX_CLICK_TIME = 1000.0;
 const UPDATE_INTERVALL = 100.0;
 const DELETE_DELAY = 500.0;
+const HOVER_END_CHECK_DELAY = 200.0;
 
 function endHovering() {
-  if (clickTimer.value !== null) {
-    clearTimeout(clickTimer.value);
-    clickTimer.value = null;
-  }
   isHovering.value = false;
-  isClicking.value = false;
-  startClickedMilliseconds.value = null;
-  percentage.value = 0.0;
+  setTimeout(endClickingIfNotHovering, HOVER_END_CHECK_DELAY);
+}
+
+function endClickingIfNotHovering() {
+  if (!isHovering.value) {
+    endClicking();
+  }
 }
 
 function endClicking() {
