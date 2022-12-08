@@ -10,6 +10,8 @@
           :ingredient="ingredient"
           :available-recipe-references="availableRecipeReferences"
           :ordering="index"
+          :is-udating-ordering="isUpdatingOrdering"
+          :update-ordering-error-message="updateOrderingErrorMessage"
           @added-ingredient="addIngredient"
           @updated-ingredient="updateIngredient"
           @removed-ingredient="removeIngredient"
@@ -97,18 +99,29 @@ function removeIngredient(ingredientId: string) {
 }
 
 function moveIngredient(ingredientId: string, shiftIndexBy: number) {
-  const shiftedIndex = ingredientsSorted.value.findIndex(
+  const originalIndex = ingredientsSorted.value.findIndex(
     (value) => value.id === ingredientId
   );
-  if (shiftedIndex > 0) {
+  const newIndex = originalIndex + shiftIndexBy;
+  if (newIndex >= 0 && newIndex < props.recipe.ingredients.length) {
     const shiftedIngredients = [...ingredientsSorted.value];
-    const shiftedElement = shiftedIngredients.splice(shiftedIndex, 1)[0];
-    shiftedIngredients.splice(shiftedIndex + shiftIndexBy, 0, shiftedElement);
+    const shiftedElement = shiftedIngredients.splice(originalIndex, 1)[0];
+    shiftedIngredients.splice(newIndex, 0, shiftedElement);
     shiftedIngredients.forEach((value, index) => {
       value.ordering = index;
     });
-    updateIngredientOrder(shiftedIngredients.map((value) => value.id));
-    emit("updatedIngredients", shiftedIngredients);
+    isUpdatingOrdering.value = true;
+    updateOrderingErrorMessage.value = "";
+    updateIngredientOrder(shiftedIngredients.map((value) => value.id))
+      .then(() => {
+        emit("updatedIngredients", shiftedIngredients);
+      })
+      .catch((error) => {
+        updateOrderingErrorMessage.value = String(error);
+      })
+      .finally(() => {
+        isUpdatingOrdering.value = false;
+      });
   }
 }
 

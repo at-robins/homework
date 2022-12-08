@@ -78,16 +78,16 @@
             dense
             round
             icon="arrow_drop_up"
-            :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
-            :loading="isCreatingOrUpdatingIngredient"
+            :color="!updateOrderingErrorMessage ? 'grey' : 'negative'"
+            :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickUpButton"
           >
             <q-tooltip ref="upButtonRef">
-              <div v-if="!creationOrUpdateErrorMessage">
+              <div v-if="!updateOrderingErrorMessage">
                 Zutat nach oben verschieben
               </div>
               <div v-else>
-                {{ creationOrUpdateErrorMessage }}
+                {{ updateOrderingErrorMessage }}
               </div>
             </q-tooltip>
           </q-btn>
@@ -99,16 +99,16 @@
             dense
             round
             icon="arrow_drop_down"
-            :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
-            :loading="isCreatingOrUpdatingIngredient"
+            :color="!updateOrderingErrorMessage ? 'grey' : 'negative'"
+            :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickDownButton"
           >
             <q-tooltip ref="downButtonRef">
-              <div v-if="!creationOrUpdateErrorMessage">
+              <div v-if="!updateOrderingErrorMessage">
                 Zutat nach unten verschieben
               </div>
               <div v-else>
-                {{ creationOrUpdateErrorMessage }}
+                {{ updateOrderingErrorMessage }}
               </div>
             </q-tooltip>
           </q-btn>
@@ -121,7 +121,7 @@
             round
             icon="edit"
             :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
-            :loading="isCreatingOrUpdatingIngredient"
+            :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickEditButton"
           >
             <q-tooltip>
@@ -216,6 +216,20 @@ const props = defineProps({
     required: false,
     default: () => {
       return 0;
+    },
+  },
+  isUdatingOrdering: {
+    type: Boolean,
+    required: false,
+    default: () => {
+      return false;
+    },
+  },
+  updateOrderingErrorMessage: {
+    type: String,
+    required: false,
+    default: () => {
+      return "";
     },
   },
 });
