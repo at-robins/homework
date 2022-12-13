@@ -8,6 +8,8 @@ const DEFAULT_FOLDER_APPLICATION_ATTACHMENTS: &str = "attachments";
 const DEFAULT_FOLDER_APPLICATION_THUMBNAILS: &str = "thumbnails";
 /// The name of the default configuration file.
 const DEFAULT_FILE_APPLICATION_CONFIGURATION: &str = "configuration";
+/// The default log level.
+const DEFAULT_LOG_LEVEL: log::Level = log::Level::Warn;
 /// The name of the default database file.
 const DEFAULT_FILE_APPLICATION_DATABASE: &str = "database";
 /// The file extension of a database.
@@ -28,6 +30,7 @@ const THUMBNAIL_WIDTHS: &[u32; 7] = &[0, 100, 200, 400, 600, 800, 1000];
 use std::{
     fs::{File, OpenOptions},
     path::PathBuf,
+    str::FromStr,
     time::SystemTime,
 };
 
@@ -47,6 +50,7 @@ pub struct Configuration {
     server_port: Option<String>,
     attachment_path: Option<String>,
     thumbnail_path: Option<String>,
+    log_level: Option<String>,
 }
 
 impl Configuration {
@@ -269,6 +273,18 @@ impl Configuration {
             .unwrap_or(DEFAULT_CONFIG_SERVER_PORT.to_string())
     }
 
+    /// Returns the logging level of the server.
+    pub fn log_level(&self) -> log::Level {
+        self.log_level
+            .clone()
+            .and_then(|log_level_string| {
+                log::Level::from_str(&log_level_string)
+                    .map_err(|err| eprintln!("Parsing log level {} failed with error: {}", log_level_string, err))
+                    .ok()
+            })
+            .unwrap_or(DEFAULT_LOG_LEVEL)
+    }
+
     /// Returns the full server address including port information.
     pub fn server_address_and_port(&self) -> String {
         format!("{}:{}", self.server_address(), self.server_port())
@@ -282,6 +298,7 @@ impl Default for Configuration {
             server_port: None,
             attachment_path: None,
             thumbnail_path: None,
+            log_level: None,
         }
     }
 }

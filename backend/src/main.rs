@@ -6,8 +6,8 @@ use controller::routing::routing_config;
 
 #[actix_web::main]
 async fn main() -> Result<(), HomeworkError> {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let app_config = Arc::new(init_config());
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(app_config.log_level().as_str())).init();
     let app_config_internal = Arc::clone(&app_config);
     Configuration::initialise_database()?;
     Ok(HttpServer::new(move || {
@@ -24,13 +24,13 @@ async fn main() -> Result<(), HomeworkError> {
 fn init_config() -> Configuration {
     let config = Configuration::load_from_file()
         .map_err(|config_loading_error| {
-            println!("Configuration could not be loaded using default: {:?}", config_loading_error);
+            eprintln!("Configuration could not be loaded using default: {:?}", config_loading_error);
             config_loading_error
         })
         .unwrap_or_default();
     if !Configuration::exists() {
         if let Err(config_save_error) = config.save_to_file() {
-            println!("Configuration could not be saved: {:?}", config_save_error);
+            eprintln!("Configuration could not be saved: {:?}", config_save_error);
         }
     }
     config
