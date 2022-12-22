@@ -8,6 +8,10 @@ const DEFAULT_FOLDER_APPLICATION_ATTACHMENTS: &str = "attachments";
 const DEFAULT_FOLDER_APPLICATION_THUMBNAILS: &str = "thumbnails";
 /// The name of the default configuration file.
 const DEFAULT_FILE_APPLICATION_CONFIGURATION: &str = "configuration";
+/// The name of the default backup.
+const DEFAULT_FOLDER_APPLICATION_BACKUP: &str = "backups";
+/// The maximum number of backups stored.
+const DEFAULT_MAXIMUM_STORED_BACKUPS: usize = 3;
 /// The default log level.
 const DEFAULT_LOG_LEVEL: log::Level = log::Level::Warn;
 /// The name of the default database file.
@@ -51,6 +55,8 @@ pub struct Configuration {
     attachment_path: Option<String>,
     thumbnail_path: Option<String>,
     log_level: Option<String>,
+    backup_path: Option<String>,
+    maximum_backups: Option<usize>,
 }
 
 impl Configuration {
@@ -273,6 +279,11 @@ impl Configuration {
             .unwrap_or(DEFAULT_CONFIG_SERVER_PORT.to_string())
     }
 
+    /// Returns the full server address including port information.
+    pub fn server_address_and_port(&self) -> String {
+        format!("{}:{}", self.server_address(), self.server_port())
+    }
+
     /// Returns the logging level of the server.
     pub fn log_level(&self) -> log::Level {
         self.log_level
@@ -285,9 +296,25 @@ impl Configuration {
             .unwrap_or(DEFAULT_LOG_LEVEL)
     }
 
-    /// Returns the full server address including port information.
-    pub fn server_address_and_port(&self) -> String {
-        format!("{}:{}", self.server_address(), self.server_port())
+    /// Returns the maximum number of backups.
+    pub fn maximum_backups(&self) -> usize {
+        self.maximum_backups
+            .clone()
+            .unwrap_or(DEFAULT_MAXIMUM_STORED_BACKUPS)
+    }
+
+    /// The path to the backup folder.
+    pub fn application_backup_folder_path(&self) -> PathBuf {
+        if let Some(configured_path_string) = self.backup_path.clone() {
+            if let Ok(configured_path) = PathBuf::try_from(configured_path_string) {
+                return configured_path;
+            } else {
+                log::warn!("{:?} is not a valid path.", self.backup_path);
+            }
+        }
+        let mut default_path = Configuration::application_configuration_folder_path();
+        default_path.push(DEFAULT_FOLDER_APPLICATION_BACKUP);
+        default_path
     }
 }
 
@@ -299,6 +326,8 @@ impl Default for Configuration {
             attachment_path: None,
             thumbnail_path: None,
             log_level: None,
+            backup_path: None,
+            maximum_backups: None,
         }
     }
 }
