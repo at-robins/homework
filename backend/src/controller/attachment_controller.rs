@@ -1,9 +1,4 @@
-use std::{
-    fs::File,
-    io::Write,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{fs::File, io::Write, path::Path, sync::Arc};
 
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
@@ -110,7 +105,7 @@ pub async fn delete_attachment(
     let app_config = configuration_from_request(&request);
 
     // Get the attachment file path.
-    let file_path = attachment_path(&request, uuid);
+    let file_path = app_config.application_attachment_file_path(uuid);
 
     // Remove the attachment from the disk.
     std::fs::remove_file(file_path)?;
@@ -140,7 +135,8 @@ pub async fn download_attachment(
     id: web::Path<Uuid>,
 ) -> Result<NamedFile, HomeworkError> {
     let uuid: Uuid = id.into_inner();
-    let file_path = attachment_path(&request, uuid);
+    let app_config = configuration_from_request(&request);
+    let file_path = app_config.application_attachment_file_path(uuid);
     let file_name = attachment_file_name_from_db(uuid)?;
     Ok(NamedFile::from_file(File::open(file_path)?, file_name)?)
 }
@@ -203,13 +199,6 @@ async fn generate_thumbnail(
     web::block(move || thumbnail.save_with_format(thumbnail_path, image::ImageFormat::WebP))
         .await??;
     Ok(())
-}
-
-fn attachment_path(request: &HttpRequest, uuid: Uuid) -> PathBuf {
-    let app_config = configuration_from_request(request);
-    let mut file_path = app_config.application_attachments_folder_path();
-    file_path.push(uuid.to_string());
-    file_path
 }
 
 fn attachment_file_name_from_db(uuid: Uuid) -> Result<String, HomeworkError> {

@@ -246,6 +246,17 @@ impl Configuration {
         default_path
     }
 
+    /// The path to the specified attachment file.
+    /// 
+    /// # Parameters
+    /// 
+    /// * `attachment_id` - the [`Uuid`] of the attachment 
+    pub fn application_attachment_file_path(&self, attachment_id: Uuid) -> PathBuf {
+        let mut path = self.application_attachments_folder_path();
+        path.push(attachment_id.to_string());
+        path
+    }
+
     /// The path to the thumbnail folder.
     pub fn application_thumbnail_folder_path(&self) -> PathBuf {
         if let Some(configured_path_string) = self.thumbnail_path.clone() {
