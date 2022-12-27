@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use uuid::Uuid;
 
 use crate::{
@@ -23,41 +23,66 @@ pub async fn single_recipe(id: web::Path<Uuid>) -> Result<impl Responder, Homewo
     Ok(web::Json(Recipe::select_from_database_by_id(uuid, &conn)?))
 }
 
-pub async fn create_recipe(title: web::Json<String>) -> Result<HttpResponse, HomeworkError> {
+pub async fn create_recipe(
+    title: web::Json<String>,
+    request: HttpRequest,
+) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let conn = Configuration::database_connection()?;
     let title = title.into_inner();
     // Generate a new UUID for the recipe.
     let uuid = Configuration::generate_uuid();
     Recipe::insert_into_database_new_entry(uuid, &title, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     // Return the UUID of the created recipe.
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
 
-pub async fn remove_recipe(path: web::Path<Uuid>) -> Result<HttpResponse, HomeworkError> {
+pub async fn remove_recipe(
+    path: web::Path<Uuid>,
+    request: HttpRequest,
+) -> Result<HttpResponse, HomeworkError> {
+    // TODO: Remove all corresponding attachments.
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::delete_from_database_by_id(uuid_recipe, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn change_recipe_string_column(
     value: web::Json<String>,
     path: web::Path<(Uuid, String)>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let (uuid, column) = path.into_inner();
     let value = value.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_string_column(uuid, &column, &value, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn change_rating(
     rating: web::Json<u8>,
     id: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid = id.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_rating(uuid, rating.into_inner(), &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
@@ -75,49 +100,72 @@ pub async fn all_recipe_tags() -> Result<impl Responder, HomeworkError> {
 pub async fn add_tag_to_recipe(
     tag: web::Json<String>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid = path.into_inner();
     let conn = Configuration::database_connection()?;
     let tag = tag.into_inner();
     Recipe::update_in_database_insert_tag(uuid, &tag, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Created().finish())
 }
 
 pub async fn remove_tag_from_recipe(
     path: web::Path<(Uuid, String)>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let (uuid, tag_name) = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_delete_tag(uuid, &tag_name, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn add_attachment_to_recipe(
     attachment: web::Json<Uuid>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let uuid_attachment = attachment.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_insert_attachment(uuid_recipe, uuid_attachment, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Created().finish())
 }
 
 pub async fn set_thumbnail_for_recipe(
     attachment: web::Json<Option<Uuid>>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let uuid_attachment = attachment.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_thumbnail(uuid_recipe, uuid_attachment, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn add_ingredient_to_recipe(
     ingredient: web::Json<Ingredient>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let mut ingredient = ingredient.into_inner();
     // Overwrite the UUID.
@@ -126,13 +174,18 @@ pub async fn add_ingredient_to_recipe(
     ingredient.set_recipe_id(uuid_recipe);
     let conn = Configuration::database_connection()?;
     ingredient.insert_into_database(&conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Created().body(uuid_ingredient.to_string()))
 }
 
 pub async fn modify_ingredient(
     ingredient: web::Json<Ingredient>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let ingredient = ingredient.into_inner();
     if uuid_recipe != ingredient.recipe_id() {
@@ -148,13 +201,18 @@ pub async fn modify_ingredient(
     }
     let conn = Configuration::database_connection()?;
     ingredient.update_in_database(&conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn modify_ingredients_ordering(
     ingredients: web::Json<Vec<Uuid>>,
     path: web::Path<Uuid>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let ingredient_uuids = ingredients.into_inner();
     let conn = Configuration::database_connection()?;
@@ -181,14 +239,21 @@ pub async fn modify_ingredients_ordering(
     for (i, ingredient_uuid) in ingredient_uuids.iter().enumerate() {
         Ingredient::update_ordering_by_id(i as i32, *ingredient_uuid, &conn)?;
     }
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }
 
 pub async fn remove_ingredient_from_recipe(
     path: web::Path<(Uuid, Uuid)>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
     let (_, uuid_ingredient) = path.into_inner();
     let conn = Configuration::database_connection()?;
     Ingredient::delete_from_database_by_id(uuid_ingredient, &conn)?;
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
     Ok(HttpResponse::Ok().finish())
 }

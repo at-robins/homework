@@ -49,6 +49,9 @@ pub async fn add_attachment(
     // Generate a new UUID for the attachment.
     let uuid = Configuration::generate_uuid();
 
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
+
     // Create the attachment folder.
     let app_config = request
         .app_data::<Arc<Configuration>>()
@@ -83,6 +86,9 @@ pub async fn add_attachment(
         ],
     )?;
 
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
+
     // Return the UUID of the created attachment.
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
@@ -92,6 +98,10 @@ pub async fn delete_attachment(
     id: web::Path<Uuid>,
 ) -> Result<HttpResponseBuilder, HomeworkError> {
     let uuid: Uuid = id.into_inner();
+
+    // Load the backup service.
+    let backup_service = Configuration::backup_service_from_request(&request);
+
     // Open a databse connection first so the file is not deleted in case of connection errors
     // and check that the attachmnet indeed exists.
     let conn = Configuration::database_connection()?;
@@ -101,7 +111,6 @@ pub async fn delete_attachment(
     let app_config = request
         .app_data::<Arc<Configuration>>()
         .expect("The configuration must be accessible.");
-
 
     // Get the attachment file path.
     let file_path = attachment_path(&request, uuid);
@@ -121,6 +130,9 @@ pub async fn delete_attachment(
 
     // Remove the attachment from the database.
     conn.execute("DELETE FROM attachment WHERE id = ?1", params![uuid,])?;
+
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
 
     // Return the UUID of the created attachment.
     Ok(HttpResponse::Ok())

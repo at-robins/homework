@@ -1,9 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use actix_web::{middleware, App, HttpServer};
 use application::{config::Configuration, error::HomeworkError};
 use controller::routing::routing_config;
 use log::error;
+use parking_lot::Mutex;
 use service::backup_service::BackupService;
 
 #[actix_web::main]
@@ -22,9 +23,7 @@ async fn main() -> Result<(), HomeworkError> {
         let mut interval = actix_rt::time::interval(std::time::Duration::from_secs(3600));
         loop {
             interval.tick().await;
-            let mut service = backup_service_schedule
-                .lock()
-                .unwrap_or_else(|err| err.into_inner());
+            let mut service = backup_service_schedule.lock();
             if let Err(err) = service.check_timed_backup() {
                 error!("{}", err);
             }

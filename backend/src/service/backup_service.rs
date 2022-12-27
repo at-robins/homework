@@ -39,6 +39,7 @@ impl BackupService {
     pub fn request_timed_backup(&mut self) {
         self.next_timed_backup =
             Some(chrono::Utc::now() + chrono::Duration::hours(BACKUP_UPDATE_INTERVALL));
+        info!("New backup scheduled: {:?}", self.next_timed_backup);
     }
 
     /// Checks if a timed backup is scheduled and executes the backup if necessary.
@@ -60,6 +61,7 @@ impl BackupService {
         let attachments_path = self.configuration().application_attachments_folder_path();
         let database_path = Configuration::application_database_file_path();
         let timestamp = chrono::Utc::now().timestamp();
+        info!("Creating new backup {}.", timestamp);
         let mut backup_file_path = self.configuration().application_backup_folder_path();
         std::fs::create_dir_all(&backup_file_path)?;
         backup_file_path.push(timestamp.to_string());

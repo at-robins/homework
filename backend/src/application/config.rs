@@ -35,15 +35,20 @@ use std::{
     fs::{File, OpenOptions},
     path::PathBuf,
     str::FromStr,
+    sync::Arc,
     time::SystemTime,
 };
 
+use actix_web::HttpRequest;
+use parking_lot::Mutex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use uuid::{
     v1::{Context, Timestamp},
     Uuid,
 };
+
+use crate::service::backup_service::BackupService;
 
 use super::error::HomeworkError;
 
@@ -232,6 +237,23 @@ impl Configuration {
         path
     }
 
+    /// Extracts the backup service from a request.
+    /// 
+    /// # Parameters
+    /// 
+    /// * `request` - the HTTP request to extract the backup service from
+    ///
+    /// # Panics
+    /// 
+    /// If the backup service was not defined in the app configuration.
+    pub fn backup_service_from_request(request: &HttpRequest) -> Arc<Mutex<BackupService>> {
+        Arc::clone(
+            request
+                .app_data::<Arc<Mutex<BackupService>>>()
+                .expect("The backup service must be accessible."),
+        )
+    }
+
     /// The path to the attachments folder.
     pub fn application_attachments_folder_path(&self) -> PathBuf {
         if let Some(configured_path_string) = self.attachment_path.clone() {
@@ -290,7 +312,12 @@ impl Configuration {
             .clone()
             .and_then(|log_level_string| {
                 log::Level::from_str(&log_level_string)
-                    .map_err(|err| eprintln!("Parsing log level {} failed with error: {}", log_level_string, err))
+                    .map_err(|err| {
+                        eprintln!(
+                            "Parsing log level {} failed with error: {}",
+                            log_level_string, err
+                        )
+                    })
                     .ok()
             })
             .unwrap_or(DEFAULT_LOG_LEVEL)
