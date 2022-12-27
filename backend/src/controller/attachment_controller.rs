@@ -21,6 +21,7 @@ use crate::{
         error::{HomeworkError, InternalError},
     },
     entity::attachment::Attachment,
+    service::application_service::{backup_service_from_request, configuration_from_request},
 };
 
 /// Lists all attachments saved in the database.
@@ -50,12 +51,10 @@ pub async fn add_attachment(
     let uuid = Configuration::generate_uuid();
 
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
 
     // Create the attachment folder.
-    let app_config = request
-        .app_data::<Arc<Configuration>>()
-        .expect("The configuration must be accessible.");
+    let app_config = configuration_from_request(&request);
     let mut file_path = app_config.application_attachments_folder_path();
     std::fs::create_dir_all(&file_path)?;
     file_path.push(uuid.to_string());
@@ -100,7 +99,7 @@ pub async fn delete_attachment(
     let uuid: Uuid = id.into_inner();
 
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
 
     // Open a databse connection first so the file is not deleted in case of connection errors
     // and check that the attachmnet indeed exists.
@@ -108,9 +107,7 @@ pub async fn delete_attachment(
     Attachment::exists_in_database_by_id_throw_not_found(uuid, &conn)?;
 
     // Access the configuration.
-    let app_config = request
-        .app_data::<Arc<Configuration>>()
-        .expect("The configuration must be accessible.");
+    let app_config = configuration_from_request(&request);
 
     // Get the attachment file path.
     let file_path = attachment_path(&request, uuid);
@@ -165,15 +162,13 @@ pub async fn thumbnail_image_attachment(
             "The requested thumbnail size is not supported.",
         )));
     }
-    let app_config = request
-        .app_data::<Arc<Configuration>>()
-        .expect("The configuration must be accessible.");
+    let app_config = configuration_from_request(&request);
 
     let mut thumbnail_path = app_config.application_thumbnail_folder_path();
     std::fs::create_dir_all(&thumbnail_path)?;
     thumbnail_path.push(format!("{}_{}.webp", uuid, width));
     if !thumbnail_path.try_exists()? {
-        generate_thumbnail(uuid, width, Arc::clone(app_config)).await?;
+        generate_thumbnail(uuid, width, app_config).await?;
     }
 
     Ok(NamedFile::from_file(File::open(&thumbnail_path)?, thumbnail_path)?)
@@ -211,9 +206,7 @@ async fn generate_thumbnail(
 }
 
 fn attachment_path(request: &HttpRequest, uuid: Uuid) -> PathBuf {
-    let app_config = request
-        .app_data::<Arc<Configuration>>()
-        .expect("The configuration must be accessible.");
+    let app_config = configuration_from_request(request);
     let mut file_path = app_config.application_attachments_folder_path();
     file_path.push(uuid.to_string());
     file_path

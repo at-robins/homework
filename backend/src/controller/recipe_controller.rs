@@ -8,7 +8,7 @@ use crate::{
         config::Configuration,
         error::{HomeworkError, InternalError},
     },
-    entity::{ingredient::Ingredient, recipe::Recipe},
+    entity::{ingredient::Ingredient, recipe::Recipe}, service::application_service::backup_service_from_request,
 };
 
 /// Lists all recipes saved in the database.
@@ -28,7 +28,7 @@ pub async fn create_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let conn = Configuration::database_connection()?;
     let title = title.into_inner();
     // Generate a new UUID for the recipe.
@@ -46,7 +46,7 @@ pub async fn remove_recipe(
 ) -> Result<HttpResponse, HomeworkError> {
     // TODO: Remove all corresponding attachments.
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::delete_from_database_by_id(uuid_recipe, &conn)?;
@@ -61,7 +61,7 @@ pub async fn change_recipe_string_column(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let (uuid, column) = path.into_inner();
     let value = value.into_inner();
     let conn = Configuration::database_connection()?;
@@ -77,7 +77,7 @@ pub async fn change_rating(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid = id.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_rating(uuid, rating.into_inner(), &conn)?;
@@ -103,7 +103,7 @@ pub async fn add_tag_to_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid = path.into_inner();
     let conn = Configuration::database_connection()?;
     let tag = tag.into_inner();
@@ -118,7 +118,7 @@ pub async fn remove_tag_from_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let (uuid, tag_name) = path.into_inner();
     let conn = Configuration::database_connection()?;
     Recipe::update_in_database_delete_tag(uuid, &tag_name, &conn)?;
@@ -133,7 +133,7 @@ pub async fn add_attachment_to_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let uuid_attachment = attachment.into_inner();
     let conn = Configuration::database_connection()?;
@@ -149,7 +149,7 @@ pub async fn set_thumbnail_for_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let uuid_attachment = attachment.into_inner();
     let conn = Configuration::database_connection()?;
@@ -165,7 +165,7 @@ pub async fn add_ingredient_to_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let mut ingredient = ingredient.into_inner();
     // Overwrite the UUID.
@@ -185,7 +185,7 @@ pub async fn modify_ingredient(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let ingredient = ingredient.into_inner();
     if uuid_recipe != ingredient.recipe_id() {
@@ -212,7 +212,7 @@ pub async fn modify_ingredients_ordering(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let uuid_recipe = path.into_inner();
     let ingredient_uuids = ingredients.into_inner();
     let conn = Configuration::database_connection()?;
@@ -249,7 +249,7 @@ pub async fn remove_ingredient_from_recipe(
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
     // Load the backup service.
-    let backup_service = Configuration::backup_service_from_request(&request);
+    let backup_service = backup_service_from_request(&request);
     let (_, uuid_ingredient) = path.into_inner();
     let conn = Configuration::database_connection()?;
     Ingredient::delete_from_database_by_id(uuid_ingredient, &conn)?;
