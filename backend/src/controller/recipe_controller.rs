@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::Arc};
 
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use uuid::Uuid;
@@ -8,8 +8,10 @@ use crate::{
         config::Configuration,
         error::{HomeworkError, InternalError},
     },
-    entity::{ingredient::Ingredient, recipe::Recipe}, service::application_service::backup_service_from_request,
+    entity::{ingredient::Ingredient, recipe::Recipe}, service::application_service::{backup_service_from_request, configuration_from_request},
 };
+
+use super::attachment_controller;
 
 /// Lists all recipes saved in the database.
 pub async fn all_recipes() -> Result<impl Responder, HomeworkError> {
@@ -44,11 +46,16 @@ pub async fn remove_recipe(
     path: web::Path<Uuid>,
     request: HttpRequest,
 ) -> Result<HttpResponse, HomeworkError> {
-    // TODO: Remove all corresponding attachments.
-    // Load the backup service.
+    // Load the backup service and configuration.
     let backup_service = backup_service_from_request(&request);
+    let config  = configuration_from_request(&request);
     let uuid_recipe = path.into_inner();
     let conn = Configuration::database_connection()?;
+    let recipe = Recipe::select_from_database_by_id(uuid_recipe, &conn)?;
+    // Delete all corresponding attachments.
+    for recipe_attachment in recipe.attachments() {
+        attachment_controller::delete_attachment(Arc::clone(&config), recipe_attachment.id())?;
+    }
     Recipe::delete_from_database_by_id(uuid_recipe, &conn)?;
     // Request a backup as internal data changed.
     backup_service.lock().request_timed_backup();

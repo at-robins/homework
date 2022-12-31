@@ -23,6 +23,11 @@ pub struct Recipe {
 }
 
 impl Recipe {
+    /// Returns all [`Attachment`]s referring to this `Recipe`.
+    pub fn attachments(&self) -> &Vec<Attachment> {
+        &self.attachments
+    }
+
     pub fn select_from_database_by_id(
         recipe_id: Uuid,
         connection: &Connection,

@@ -87,7 +87,7 @@ pub async fn add_attachment(
     Ok(HttpResponse::Created().body(uuid.to_string()))
 }
 
-pub async fn delete_attachment(
+pub async fn delete_attachment_request(
     request: HttpRequest,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponseBuilder, HomeworkError> {
@@ -96,22 +96,35 @@ pub async fn delete_attachment(
     // Load the backup service.
     let backup_service = backup_service_from_request(&request);
 
+    delete_attachment(configuration_from_request(&request), uuid)?;
+
+    // Request a backup as internal data changed.
+    backup_service.lock().request_timed_backup();
+
+    Ok(HttpResponse::Ok())
+}
+
+
+/// Deletes the attachment with the specified [`Uuid`] from disk and database.
+/// 
+/// # Parameters
+/// 
+/// * `config` - the app [`Configuration`]
+/// * `uuid` - the [`Uuid`] of the attachment to delete
+pub fn delete_attachment(config: Arc<Configuration>, uuid: Uuid) -> Result<(), HomeworkError> {
     // Open a databse connection first so the file is not deleted in case of connection errors
     // and check that the attachmnet indeed exists.
     let conn = Configuration::database_connection()?;
     Attachment::exists_in_database_by_id_throw_not_found(uuid, &conn)?;
 
-    // Access the configuration.
-    let app_config = configuration_from_request(&request);
-
     // Get the attachment file path.
-    let file_path = app_config.application_attachment_file_path(uuid);
+    let file_path = config.application_attachment_file_path(uuid);
 
     // Remove the attachment from the disk.
     std::fs::remove_file(file_path)?;
 
     // Remove potential thumbnails from the disk.
-    for entry in std::fs::read_dir(app_config.application_thumbnail_folder_path())? {
+    for entry in std::fs::read_dir(config.application_thumbnail_folder_path())? {
         let entry = entry?;
         if let Some(file_name) = entry.file_name().to_str() {
             if file_name.contains(&uuid.to_string()) {
@@ -123,11 +136,7 @@ pub async fn delete_attachment(
     // Remove the attachment from the database.
     conn.execute("DELETE FROM attachment WHERE id = ?1", params![uuid,])?;
 
-    // Request a backup as internal data changed.
-    backup_service.lock().request_timed_backup();
-
-    // Return the UUID of the created attachment.
-    Ok(HttpResponse::Ok())
+    Ok(())
 }
 
 pub async fn download_attachment(

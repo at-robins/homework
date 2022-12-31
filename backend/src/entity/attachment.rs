@@ -14,6 +14,12 @@ pub struct Attachment {
 }
 
 impl Attachment {
+    /// Returns the ID of this `Attachment`.
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    /// Returns the name of this `Attachment`.
     pub fn name(&self) -> &str {
         &self.name
     }

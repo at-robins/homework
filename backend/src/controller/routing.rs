@@ -3,18 +3,21 @@ use actix_web::web::{self, ServiceConfig};
 
 use super::{
     attachment_controller::{
-        add_attachment, all_attachments, delete_attachment, download_attachment, thumbnail_image_attachment,
+        add_attachment, all_attachments, delete_attachment_request, download_attachment,
+        thumbnail_image_attachment,
     },
     payment_controller::{
         add_attachment_to_payment, add_tag_to_payment, all_payment_tags, all_payments,
-        change_payment_string_column, create_payment, remove_payment, remove_tag_from_payment,
-        single_payment, remove_multiple_payments,
+        change_payment_string_column, create_payment, remove_multiple_payments, remove_payment,
+        remove_tag_from_payment, single_payment,
     },
     recipe_controller::{
         add_attachment_to_recipe, add_ingredient_to_recipe, add_tag_to_recipe, all_recipe_tags,
         all_recipes, change_rating, change_recipe_string_column, create_recipe, modify_ingredient,
-        remove_ingredient_from_recipe, remove_recipe, remove_tag_from_recipe, single_recipe, set_thumbnail_for_recipe, modify_ingredients_ordering,
-    }, resources_controller::favicon,
+        modify_ingredients_ordering, remove_ingredient_from_recipe, remove_recipe,
+        remove_tag_from_recipe, set_thumbnail_for_recipe, single_recipe,
+    },
+    resources_controller::favicon,
 };
 
 async fn index() -> actix_web::Result<NamedFile> {
@@ -38,7 +41,7 @@ pub fn routing_config(cfg: &mut ServiceConfig) {
     .service(
         web::resource("/api/attachment/{id}")
             .route(web::get().to(download_attachment))
-            .route(web::delete().to(delete_attachment)),
+            .route(web::delete().to(delete_attachment_request)),
     )
     .route("/api/attachment/{id}/{width}", web::get().to(thumbnail_image_attachment))
 
