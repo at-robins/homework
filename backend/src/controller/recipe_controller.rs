@@ -1,6 +1,7 @@
 use std::{collections::HashSet, sync::Arc};
 
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use log::info;
 use uuid::Uuid;
 
 use crate::{
@@ -59,6 +60,7 @@ pub async fn remove_recipe(
     Recipe::delete_from_database_by_id(uuid_recipe, &conn)?;
     // Request a backup as internal data changed.
     backup_service.lock().request_timed_backup();
+    info!("Removed recipe {}.", uuid_recipe);
     Ok(HttpResponse::Ok().finish())
 }
 

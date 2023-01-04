@@ -30,7 +30,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
-  (event: "deletedRecipe"): void;
+  (event: "deletedRecipe", id: string): void;
 }>();
 
 const imageUrl = computed(() => {
@@ -52,7 +52,7 @@ function deleteRecipe() {
     axios
       .delete("/api/recipe/" + props.recipe.id)
       .then(() => {
-        emit("deletedRecipe");
+        emit("deletedRecipe", props.recipe.id);
       })
       .catch((error) => {
         deletionErrorMessage.value = error;

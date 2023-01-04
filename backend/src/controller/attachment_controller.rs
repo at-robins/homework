@@ -7,6 +7,7 @@ use actix_web::{
     HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
 };
 use futures_util::TryStreamExt as _;
+use log::info;
 use rusqlite::params;
 use uuid::Uuid;
 
@@ -135,6 +136,8 @@ pub fn delete_attachment(config: Arc<Configuration>, uuid: Uuid) -> Result<(), H
 
     // Remove the attachment from the database.
     conn.execute("DELETE FROM attachment WHERE id = ?1", params![uuid,])?;
+
+    info!("Removed attachment {}.", uuid);
 
     Ok(())
 }

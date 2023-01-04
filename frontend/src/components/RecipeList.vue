@@ -107,6 +107,9 @@ function remove_recipe(recipe_id: string) {
   filteredRecipes.value = filteredRecipes.value.filter(
     (recipe) => recipe.id !== recipe_id
   );
+  loadedRecipes.value = loadedRecipes.value.filter(
+    (recipe) => recipe.id !== recipe_id
+  );
 }
 </script>
 <style scoped lang="scss"></style>
