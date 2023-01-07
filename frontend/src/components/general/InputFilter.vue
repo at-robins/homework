@@ -12,14 +12,10 @@
     @filter="applyInputFilter"
   >
     <template v-slot:append>
-      <q-btn
-        round
-        dense
-        flat
-        unelevated
-        :ripple="false"
-        :icon="matSend"
+      <q-icon
+        :name="matSend"
         @click.stop.prevent="closeFilterSelection"
+        class="q-field__focusable-action"
       />
     </template>
   </q-select>
