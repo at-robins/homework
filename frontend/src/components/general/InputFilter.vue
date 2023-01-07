@@ -3,16 +3,31 @@
     v-model="selectedModel"
     :options="inputFilteredOptions"
     :label="label"
+    ref="filterReference"
+    hide-dropdown-icon
     clearable
     multiple
     use-input
     input-debounce="0"
     @filter="applyInputFilter"
-  />
+  >
+    <template v-slot:append>
+      <q-btn
+        round
+        dense
+        flat
+        unelevated
+        :ripple="false"
+        :icon="matSend"
+        @click.stop.prevent="closeFilterSelection"
+      />
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
 import type { QSelect } from "quasar";
+import { matSend } from "@quasar/extras/material-icons";
 import { ref, watch, type PropType, type Ref } from "vue";
 
 const props = defineProps({
@@ -31,6 +46,8 @@ const emit = defineEmits<{
     selectedOptions: string | Array<string> | null
   ): void;
 }>();
+
+const filterReference: Ref<QSelect | null> = ref(null);
 
 const selectedModel: Ref<string | Array<string> | null> = ref(null);
 
@@ -67,6 +84,12 @@ function applyInputFilter(
       }
     }
   );
+}
+
+function closeFilterSelection() {
+  if (filterReference.value) {
+    filterReference.value.hidePopup();
+  }
 }
 </script>
 <style scoped lang="scss"></style>
