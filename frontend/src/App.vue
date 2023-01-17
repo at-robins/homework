@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { RouterView, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import { matLanguage } from "@quasar/extras/material-icons";
 
+const { t } = useI18n();
 const leftMenuOpen = ref(false);
 const router = useRouter();
+
+const isHome = computed(() => {
+  return router.currentRoute.value.name === "home";
+});
 
 function navigateToRecipes() {
   router.push({ name: "recipes" });
@@ -11,6 +18,10 @@ function navigateToRecipes() {
 
 function navigateToPayments() {
   router.push({ name: "payments" });
+}
+
+function navigateToHome() {
+  router.push({ name: "home" });
 }
 </script>
 
@@ -26,12 +37,24 @@ function navigateToPayments() {
           @click="leftMenuOpen = !leftMenuOpen"
         />
 
-        <q-toolbar-title>
-          <q-avatar>
-            <img src="/icon_main.svg" />
-          </q-avatar>
-          Heimarbeit
+        <q-avatar
+          @click="navigateToHome"
+          class="q-ml-md"
+          :class="{ 'cursor-pointer': !isHome }"
+        >
+          <img src="/icon_main.svg" />
+        </q-avatar>
+        <q-toolbar-title
+          @click="navigateToHome"
+          :class="{ 'cursor-pointer': !isHome }"
+        >
+          {{ t("app_title") }}
         </q-toolbar-title>
+        <q-btn flat round dense :icon="matLanguage">
+          <q-tooltip>
+            {{ t("toolbar_tooltip_language") }}
+          </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 

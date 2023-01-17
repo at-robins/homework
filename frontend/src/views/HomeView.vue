@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import Home from "@/components/Home.vue";
+import HomePage from "@/components/HomePage.vue";
 </script>
 
 <template>
   <main>
-    <home />
+    <home-page />
   </main>
 </template>
