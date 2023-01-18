@@ -1,6 +1,5 @@
 <template>
-  <div class="q-pa-md">Hello world!</div>
-  <div>{{ t("app_title") }}</div>
+  <div class="q-pa-md">{{ t("home_page_paragraph_01") }}</div>
 </template>
 
 <script setup lang="ts">
