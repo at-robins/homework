@@ -14,12 +14,12 @@ const router = useRouter();
 const selectedLanguage = ref(locale.value);
 const languages = [
   {
-    label: t("language_de"),
+    label: "language_de",
     value: "de",
     icon: "de",
   },
   {
-    label: t("language_en"),
+    label: "language_en",
     value: "en",
     icon: "gb",
   },
@@ -48,6 +48,7 @@ function navigateToHome() {
 
 function changeLanguage(language: Record<string, unknown>) {
   locale.value = language;
+  localStorage.setItem("app_locale", JSON.stringify(language));
 }
 </script>
 
@@ -96,7 +97,7 @@ function changeLanguage(language: Record<string, unknown>) {
                   <template v-slot:label="opt">
                     <div class="row items-center">
                       <span class="q-mr-sm fi" :class="'fi-' + opt.icon" />
-                      <span>{{ opt.label }}</span>
+                      <span>{{ t(opt.label) }}</span>
                     </div>
                   </template>
                 </q-option-group>

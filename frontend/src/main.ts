@@ -10,11 +10,15 @@ import { createI18n } from "vue-i18n";
 import VueClickAway from "vue3-click-away";
 import messages from "@/scripts/messages";
 
-const app = createApp(App);
+function getCurrentLocale(): string {
+  const currentLocale = localStorage.getItem("app_locale");
+  return currentLocale ? JSON.parse(currentLocale) : "de";
+}
 
+const app = createApp(App);
 const i18n = createI18n({
   legacy: false,
-  locale: "de",
+  locale: getCurrentLocale(),
   fallbackLocale: "en",
   globalInjection: true,
   messages,
