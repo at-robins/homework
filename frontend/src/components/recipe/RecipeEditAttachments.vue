@@ -4,7 +4,7 @@
       color="teal"
       filled
       v-model="fileModel"
-      label="Anhang hochladen"
+      :label="t('recipe_attachment_upload_label')"
       :loading="isUploadingAttachment"
       :readonly="isUploadingAttachment"
       :error="!!uploadErrorMessage"
@@ -17,7 +17,7 @@
       </template>
     </q-file>
     <q-list bordered class="rounded-borders" style="max-width: 600px">
-      <q-item-label header>Anhänge</q-item-label>
+      <q-item-label header>{{ t("recipe_attachment_title") }}</q-item-label>
 
       <div
         v-for="(attachment, index) in recipe.attachments"
@@ -41,7 +41,7 @@
               <delete-button
                 class="gt-xs"
                 size="12px"
-                tooltip="Anhang löschen"
+                :tooltip="t('recipe_attachment_deletion_tooltip')"
                 color="grey"
                 :loading="isDeltingAttachment.includes(attachment.id)"
                 :error="deletionErrorMessages.get(attachment.id)"
@@ -73,6 +73,9 @@ import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { ref, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   (event: "updatedAttachments", attachments: Array<Attachment>): void;

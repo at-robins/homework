@@ -26,14 +26,14 @@
           input-style="color: white;"
           :placeholder="
             !updateTagsErrorMessage
-              ? 'Stichwort zuordnen'
+              ? t('recipe_tags_label')
               : updateTagsErrorMessage
           "
           @keydown.enter="addTag"
         />
         <q-tooltip>
           <div v-if="!updateTagsErrorMessage">
-            Hier können Sie dem Rezept eine weiteres Stichwort zuordnen.
+            {{ t("recipe_tags_tooltip") }}
           </div>
           <div v-else>
             {{ updateTagsErrorMessage }}
@@ -48,6 +48,9 @@
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },

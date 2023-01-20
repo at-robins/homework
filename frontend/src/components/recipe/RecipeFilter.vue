@@ -3,20 +3,20 @@
     <input-filter
       v-model="nameModel"
       :options="allNames"
-      label="Rezeptnamen filtern"
+      :label="t('recipe_filter_label_name')"
       class="col-xs-11 col-lg-3"
     />
     <input-filter
       v-model="tagModel"
       :options="allTags"
-      label="Schlagwörter filtern"
+      :label="t('recipe_filter_label_tag')"
       multiple
       class="col-xs-11 col-lg-3"
     />
     <input-filter
       v-model="ingredientModel"
       :options="allIngredients"
-      label="Zutaten filtern"
+      :label="t('recipe_filter_label_ingredient')"
       multiple
       class="col-xs-11 col-lg-3"
     />
@@ -27,6 +27,9 @@
 import type { Ingredient, Recipe } from "@/scripts/types";
 import { computed, ref, watch, type Ref } from "vue";
 import InputFilter from "../general/InputFilter.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   recipes: { type: Array as () => Array<Recipe>, required: true },

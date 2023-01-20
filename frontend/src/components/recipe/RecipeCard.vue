@@ -9,7 +9,7 @@
           class="button-delete"
           :loading="isDeltingRecipe"
           :error="deletionErrorMessage"
-          tooltip="Halten um das Rezept zu löschen."
+          :tooltip="t('recipe_card_deletion_tooltip')"
           @deletion-confirmed="deleteRecipe"
         />
       </div>
@@ -24,6 +24,9 @@ import axios from "axios";
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import DeleteButton from "../general/DeleteButton.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },

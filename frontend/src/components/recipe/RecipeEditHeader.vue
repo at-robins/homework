@@ -23,7 +23,9 @@
       @click="editTitleField"
     >
       <q-tooltip>
-        <div v-if="!updateTitleErrorMessage">Rezepttitel bearbeiten</div>
+        <div v-if="!updateTitleErrorMessage">
+          {{ t("recipe_header_edit_tooltip") }}
+        </div>
         <div v-else>
           {{ updateTitleErrorMessage }}
         </div>
@@ -36,7 +38,7 @@
   </div>
   <div class="row no-wrap">
     <div v-if="!editReferenceMode" class="text-h5 shrink q-ma-sm">
-      Referenz: {{ referenceModel }}
+      {{ t("recipe_header_reference_title") + " " + referenceModel }}
     </div>
     <q-input
       v-else
@@ -96,6 +98,9 @@
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { nextTick, ref, watch, type Ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   recipe: { type: Object as () => Recipe, required: true },

@@ -55,9 +55,11 @@
                 <q-tooltip>
                   <div v-if="!thumbnailErrorMessage">
                     <div v-if="isAttachmentThumbnail(attachment)">
-                      Dieses Bild wird als Vorschaubild verwendet.
+                      {{ t("recipe_details_thumbnail_tooltip_current") }}
                     </div>
-                    <div v-else>Setzen Sie dieses Bild als Vorschaubild.</div>
+                    <div v-else>
+                      {{ t("recipe_details_thumbnail_tooltip_new") }}
+                    </div>
                   </div>
                   <div v-else>
                     {{ thumbnailErrorMessage }}
@@ -108,6 +110,9 @@ import RecipeEditTags from "./RecipeEditTags.vue";
 import RecipeEditAttachments from "./RecipeEditAttachments.vue";
 import RecipeEditIngredients from "./RecipeEditIngredients.vue";
 import { isImage, getImageAttachmentUrl } from "@/scripts/utilities";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   id: { type: String, required: true },

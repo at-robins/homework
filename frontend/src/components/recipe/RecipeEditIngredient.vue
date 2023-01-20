@@ -11,7 +11,7 @@
           v-else
           ref="amountInputRef"
           v-model="amountModel"
-          placeholder="Menge"
+          :placeholder="t('recipe_ingredient_amount_label')"
           input-class="text-right"
           @keydown.enter="addOrUpdateIngredient"
         ></q-input>
@@ -24,7 +24,7 @@
         <q-input
           v-else
           v-model="unitModel"
-          placeholder="Einheit"
+          :placeholder="t('recipe_ingredient_unit_label')"
           @keydown.enter="addOrUpdateIngredient"
         ></q-input>
       </q-item-section>
@@ -44,19 +44,19 @@
         <q-input
           v-else-if="!showRecipeReferencesMode && !showFilterTextMode"
           v-model="textModel"
-          placeholder="Zutat"
+          :placeholder="t('recipe_ingredient_name_label')"
           @keydown.enter="addOrUpdateIngredient"
         />
         <q-input
           v-else-if="!showRecipeReferencesMode && showFilterTextMode"
-          placeholder="Filtertext"
+          :placeholder="t('recipe_ingredient_filter_text_label')"
           v-model="filterTextModel"
           @keydown.enter="confirmFilterText"
         />
         <q-select
           v-else
           v-model="recipeReferenceModel"
-          label="Rezeptreferenz"
+          :label="t('recipe_ingredient_reference_label')"
           :options="availableRecipeReferences.references"
           emit-value
           map-options
@@ -93,7 +93,7 @@
           >
             <q-tooltip ref="upButtonRef">
               <div v-if="!updateOrderingErrorMessage">
-                Zutat nach oben verschieben
+                {{ t("recipe_ingredient_move_up_tooltip") }}
               </div>
               <div v-else>
                 {{ updateOrderingErrorMessage }}
@@ -114,7 +114,7 @@
           >
             <q-tooltip ref="downButtonRef">
               <div v-if="!updateOrderingErrorMessage">
-                Zutat nach unten verschieben
+                {{ t("recipe_ingredient_move_down_tooltip") }}
               </div>
               <div v-else>
                 {{ updateOrderingErrorMessage }}
@@ -134,7 +134,9 @@
             @click="clickEditButton"
           >
             <q-tooltip>
-              <div v-if="!creationOrUpdateErrorMessage">Zutat ändern</div>
+              <div v-if="!creationOrUpdateErrorMessage">
+                {{ t("recipe_ingredient_edit_tooltip") }}
+              </div>
               <div v-else>
                 {{ creationOrUpdateErrorMessage }}
               </div>
@@ -153,7 +155,9 @@
             @click="addOrUpdateIngredient"
           >
             <q-tooltip>
-              <div v-if="!creationOrUpdateErrorMessage">Zutat hinzufügen</div>
+              <div v-if="!creationOrUpdateErrorMessage">
+                {{ t("recipe_ingredient_add_tooltip") }}
+              </div>
               <div v-else>
                 {{ creationOrUpdateErrorMessage }}
               </div>
@@ -172,7 +176,7 @@
           >
             <q-tooltip>
               <div>
-                Text setzen, welcher zum Filtern der Zutat verwendet wird
+                {{ t("recipe_ingredient_filter_text_tooltip") }}
               </div>
             </q-tooltip>
           </q-btn>
@@ -195,7 +199,7 @@
           >
             <q-tooltip>
               <div v-if="!availableRecipeReferences.error">
-                Rezept verknüpfen
+                {{ t("recipe_ingredient_link_recipe_label") }}
               </div>
               <div v-else>
                 {{ availableRecipeReferences.error }}
@@ -209,7 +213,7 @@
             color="grey"
             :loading="isDeltingIngredient"
             :error="deletionErrorMessage"
-            tooltip="Zutat löschen"
+            :tooltip="t('recipe_ingredient_deletion_tooltip')"
             @deletion-confirmed="deleteIngredient"
           />
         </div>
@@ -225,6 +229,9 @@ import axios from "axios";
 import type { QTooltip } from "quasar";
 import { nextTick, ref, watch, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   (event: "addedIngredient", ingredient: Ingredient): void;

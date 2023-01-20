@@ -107,8 +107,10 @@
       />
       <q-tooltip>
         <div v-if="!updatingErrorMessage">
-          <div v-show="!editMode">Inhalt bearbeiten.</div>
-          Änderungen werden automatisch gespeichert.
+          <div v-show="!editMode">
+            {{ t("recipe_instructions_edit_tooltip") }}
+          </div>
+          {{ t("recipe_instructions_save_tooltip") }}
         </div>
         <div v-else>
           {{ updatingErrorMessage }}
@@ -121,6 +123,9 @@
 <script setup lang="ts">
 import axios from "axios";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   id: { type: String, required: true },

@@ -3,7 +3,7 @@
     outlined
     bottom-slots
     v-model="title"
-    label="Rezepttitel"
+    :label="t('recipe_creation_label')"
     counter
     maxlength="1000"
     :readonly="isUploadingRecipe"
@@ -24,7 +24,7 @@
       />
     </template>
 
-    <template v-slot:hint> Erstellen Sie ein neues Rezept. </template>
+    <template v-slot:hint> {{ t("recipe_creation_hint") }} </template>
 
     <template v-slot:after>
       <q-btn
@@ -42,6 +42,9 @@
 import axios from "axios";
 import { ref, type Ref } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const router = useRouter();
 const title: Ref<string> = ref("");

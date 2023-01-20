@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-xs q-gutter-xs">
     <q-list class="rounded-borders">
-      <q-item-label header>Zutaten</q-item-label>
+      <q-item-label header>{{ t("recipe_ingredients_title") }}</q-item-label>
       <div
         v-for="(ingredient, index) in ingredientsWithEmptyEntity"
         :key="ingredient.id"
@@ -33,6 +33,9 @@ import type { Recipe } from "@/scripts/types";
 import axios, { type AxiosResponse } from "axios";
 import { computed, onMounted, ref, type Ref } from "vue";
 import RecipeEditIngredient from "./RecipeEditIngredient.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   (event: "updatedIngredients", ingredients: Array<Ingredient>): void;
