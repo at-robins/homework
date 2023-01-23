@@ -296,6 +296,7 @@ watch(
     unitModel.value = newValue.unit;
     textModel.value = newValue.text;
     recipeReferenceModel.value = newValue.recipeReference;
+    filterTextModel.value = newValue.filterText;
   }
 );
 
