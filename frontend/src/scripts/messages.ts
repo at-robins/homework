@@ -36,6 +36,7 @@ export default {
     recipe_instructions_edit_tooltip: "Inhalt bearbeiten.",
     recipe_instructions_save_tooltip:
       "Änderungen werden automatisch gespeichert.",
+    recipe_instructions_title: "Notizen",
     recipe_tags_label: "Stichwort zuordnen",
     recipe_tags_tooltip:
       "Hier können Sie dem Rezept eine weiteres Stichwort zuordnen.",
@@ -80,6 +81,7 @@ export default {
     recipe_ingredients_title: "Ingredients",
     recipe_instructions_edit_tooltip: "Edit content.",
     recipe_instructions_save_tooltip: "Changes are saved automatically.",
+    recipe_instructions_title: "Notes",
     recipe_tags_label: "Add tag",
     recipe_tags_tooltip: "Here additional tags can be added to the recipe.",
     toolbar_language_title: "Select language",
