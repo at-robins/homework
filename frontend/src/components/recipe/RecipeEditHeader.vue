@@ -114,7 +114,7 @@ const isUpdatingTitle = ref(false);
 const updateTitleErrorMessage = ref("");
 const editTitleMode = ref(false);
 const titleModel = ref(props.recipe.title);
-const referenceTitleRef: Ref<HTMLInputElement | null> = ref(null);
+const titleInputRef: Ref<HTMLInputElement | null> = ref(null);
 
 const isUpdatingReference = ref(false);
 const updateReferenceErrorMessage = ref("");
@@ -190,8 +190,8 @@ function updateReference() {
 function editTitleField() {
   editTitleMode.value = true;
   nextTick(() => {
-    if (referenceTitleRef.value) {
-      referenceTitleRef.value.focus();
+    if (titleInputRef.value) {
+      titleInputRef.value.focus();
     }
   });
 }
