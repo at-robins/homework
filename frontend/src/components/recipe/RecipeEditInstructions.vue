@@ -1,5 +1,5 @@
 <template>
-  <div v-click-away="clickOutside" style="min-width: 100%">
+  <div style="min-width: 100%">
     <div class="row">
       <q-item-label header>{{ t("recipe_instructions_title") }}</q-item-label>
       <q-btn
@@ -33,6 +33,7 @@
       <div v-show="!editMode" v-html="editorModel" class="q-pa-md" />
       <div v-show="editMode" style="min-width: 100%">
         <q-editor
+          @update:model-value="onEditorUpdate"
           :readonly="!editMode"
           style="min-width: 100%"
           v-model="editorModel"
@@ -127,7 +128,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { ref, watch } from "vue";
+import { ref, watch, type Ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -144,6 +145,8 @@ const isUpdatingInstructions = ref(false);
 const updatingErrorMessage = ref("");
 const editorModel = ref(props.modelValue);
 const editMode = ref(false);
+const updateTimer: Ref<number | null> = ref(null);
+const UPDATE_DELAY = 5000.0;
 
 watch(
   () => props.modelValue,
@@ -152,18 +155,25 @@ watch(
   }
 );
 
-function clickOutside() {
-  if (editMode.value) {
-    updateInstructions();
+function onEditorUpdate() {
+  if (updateTimer.value) {
+    clearTimeout(updateTimer.value);
   }
+  updateTimer.value = setTimeout(clearTimerAndUpdateInstructions, UPDATE_DELAY);
 }
 
 function updateInstructionsOrChangeToEditMode() {
   if (editMode.value) {
     updateInstructions();
+    editMode.value = false;
   } else {
     editMode.value = true;
   }
+}
+
+function clearTimerAndUpdateInstructions() {
+  updateTimer.value = null;
+  updateInstructions();
 }
 
 function updateInstructions() {
@@ -193,10 +203,7 @@ function updateInstructions() {
       })
       .finally(() => {
         isUpdatingInstructions.value = false;
-        editMode.value = false;
       });
-  } else {
-    editMode.value = false;
   }
 }
 </script>
