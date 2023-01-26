@@ -75,8 +75,7 @@ function uploadRecipe() {
         isUploadingRecipe.value = false;
       });
   } else {
-    uploadErrorMessage.value =
-      "Bitte tragen Sie einen Titel für das zu erstellende Rezept ein.";
+    uploadErrorMessage.value = t("recipe_creation_error_message");
   }
 }
 </script>

@@ -3,7 +3,7 @@
     outlined
     bottom-slots
     v-model="title"
-    label="Zahlungsbezug"
+    :label="t('payment_creation_label')"
     counter
     maxlength="1000"
     :readonly="isUploadingPayment"
@@ -12,25 +12,25 @@
     @keydown.enter="uploadPayment"
   >
     <template v-slot:before>
-      <q-icon name="local_dining" color="primary" />
+      <q-icon :name="matReceiptLong" color="primary" />
     </template>
 
     <template v-slot:append>
       <q-icon
         v-if="!!title"
-        name="close"
+        :name="matClose"
         @click="title = ''"
         class="cursor-pointer"
       />
     </template>
 
-    <template v-slot:hint> Erstellen Sie ein neue Zahlung. </template>
+    <template v-slot:hint> {{ t("payment_creation_hint") }} </template>
 
     <template v-slot:after>
       <q-btn
         round
         color="primary"
-        icon="add"
+        :icon="matAdd"
         :disable="isUploadingPayment || !title"
         @click="uploadPayment"
       />
@@ -42,6 +42,14 @@
 import axios from "axios";
 import { ref, type Ref } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import {
+  matAdd,
+  matClose,
+  matReceiptLong,
+} from "@quasar/extras/material-icons";
+
+const { t } = useI18n();
 
 const router = useRouter();
 const title: Ref<string> = ref("");
@@ -71,8 +79,7 @@ function uploadPayment() {
         isUploadingPayment.value = false;
       });
   } else {
-    uploadErrorMessage.value =
-      "Bitte tragen Sie einen Bezugstitel für die erstellende Zahlung ein.";
+    uploadErrorMessage.value = t("payment_creation_error_message");
   }
 }
 </script>

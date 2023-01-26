@@ -4,10 +4,16 @@ export default {
     home_page_paragraph_01: "",
     language_de: "Deutsch",
     language_en: "Englisch",
+    payment_creation_error_message:
+      "Bitte tragen Sie einen Bezugstitel für die erstellende Zahlung ein.",
+    payment_creation_hint: "Erstellen Sie ein neue Zahlung.",
+    payment_creation_label: "Zahlungsbezug",
     recipe_attachment_deletion_tooltip: "Anhang löschen",
     recipe_attachment_title: "Anhänge",
     recipe_attachment_upload_label: "Anhang hochladen",
     recipe_card_deletion_tooltip: "Halten um das Rezept zu löschen.",
+    recipe_creation_error_message:
+      "Bitte tragen Sie einen Titel für das zu erstellende Rezept ein.",
     recipe_creation_hint: "Erstellen Sie ein neues Rezept.",
     recipe_creation_label: "Rezepttitel",
     recipe_details_thumbnail_tooltip_current:
@@ -50,10 +56,14 @@ export default {
     home_page_paragraph_01: "",
     language_de: "German",
     language_en: "English",
+    payment_creation_error_message: "Please enter a payment title.",
+    payment_creation_hint: "Create a new payment.",
+    payment_creation_label: "Payment name",
     recipe_attachment_deletion_tooltip: "Delete attachment",
     recipe_attachment_title: "Attachments",
     recipe_attachment_upload_label: "Upload attachment",
     recipe_card_deletion_tooltip: "Hold to delete the recipe.",
+    recipe_creation_error_message: "Please enter a recipe title.",
     recipe_creation_hint: "Create a new recipe.",
     recipe_creation_label: "Recipe title",
     recipe_details_thumbnail_tooltip_current:
