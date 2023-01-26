@@ -45,8 +45,8 @@
                 text-color="white"
                 :icon="
                   isAttachmentThumbnail(attachment)
-                    ? 'bookmark_added'
-                    : 'bookmark'
+                    ? matBookmarkAdded
+                    : matBookmark
                 "
                 @click="setThumbnail(attachment)"
                 :disable="isAttachmentThumbnail(attachment)"
@@ -110,6 +110,7 @@ import RecipeEditTags from "./RecipeEditTags.vue";
 import RecipeEditAttachments from "./RecipeEditAttachments.vue";
 import RecipeEditIngredients from "./RecipeEditIngredients.vue";
 import { isImage, getImageAttachmentUrl } from "@/scripts/utilities";
+import { matBookmark, matBookmarkAdded } from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

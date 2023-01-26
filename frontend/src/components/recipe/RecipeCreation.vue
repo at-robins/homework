@@ -12,7 +12,7 @@
     @keydown.enter="uploadRecipe"
   >
     <template v-slot:before>
-      <q-icon name="local_dining" color="primary" />
+      <q-icon :name="matLocalDining" color="primary" />
     </template>
 
     <template v-slot:append>
@@ -42,6 +42,7 @@
 import axios from "axios";
 import { ref, type Ref } from "vue";
 import { useRouter } from "vue-router";
+import { matLocalDining } from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

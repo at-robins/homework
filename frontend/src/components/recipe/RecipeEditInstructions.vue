@@ -13,7 +13,7 @@
         <q-spinner v-if="isUpdatingInstructions" color="primary" />
         <q-icon
           v-else
-          :name="editMode ? 'check' : 'edit'"
+          :name="editMode ? matCheck : matEdit"
           :color="!updatingErrorMessage ? 'primary' : 'negative'"
         />
         <q-tooltip>
@@ -129,6 +129,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { ref, watch, type Ref } from "vue";
+import { matCheck, matEdit } from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

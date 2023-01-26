@@ -67,7 +67,7 @@
             <q-icon
               v-if="recipeReferenceModel"
               class="cursor-pointer"
-              name="clear"
+              :name="matClear"
               @click.stop="
                 recipeReferenceModel = null;
                 showRecipeReferencesMode = false;
@@ -86,7 +86,7 @@
             flat
             dense
             round
-            icon="arrow_drop_up"
+            :icon="matArrowDropUp"
             :color="!updateOrderingErrorMessage ? 'grey' : 'negative'"
             :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickUpButton"
@@ -107,7 +107,7 @@
             flat
             dense
             round
-            icon="arrow_drop_down"
+            :icon="matArrowDropDown"
             :color="!updateOrderingErrorMessage ? 'grey' : 'negative'"
             :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickDownButton"
@@ -128,7 +128,7 @@
             flat
             dense
             round
-            icon="edit"
+            :icon="matEdit"
             :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
             :loading="isCreatingOrUpdatingIngredient || isUdatingOrdering"
             @click="clickEditButton"
@@ -149,7 +149,7 @@
             flat
             dense
             round
-            icon="check"
+            :icon="matCheck"
             :color="!creationOrUpdateErrorMessage ? 'grey' : 'negative'"
             :loading="isCreatingOrUpdatingIngredient"
             @click="addOrUpdateIngredient"
@@ -170,7 +170,7 @@
             flat
             dense
             round
-            :icon="filterTextModel ? 'filter_alt' : 'filter_alt_off'"
+            :icon="filterTextModel ? matFilterAlt : matFilterAltOff"
             :color="showFilterTextMode ? 'primary' : 'grey'"
             @click="clickFilterTextButton"
           >
@@ -187,7 +187,7 @@
             flat
             dense
             round
-            icon="attachment"
+            :icon="matAttachment"
             :color="
               !availableRecipeReferences.error
                 ? showRecipeReferencesMode
@@ -229,6 +229,16 @@ import axios from "axios";
 import type { QTooltip } from "quasar";
 import { nextTick, ref, watch, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
+import {
+  matArrowDropDown,
+  matArrowDropUp,
+  matAttachment,
+  matCheck,
+  matClear,
+  matEdit,
+  matFilterAlt,
+  matFilterAltOff,
+} from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

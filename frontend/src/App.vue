@@ -2,7 +2,7 @@
 import { computed, ref, watch, type Ref } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { matLanguage } from "@quasar/extras/material-icons";
+import { matLanguage, matMenu } from "@quasar/extras/material-icons";
 import type { QPopupProxy } from "quasar";
 import "/node_modules/flag-icons/css/flag-icons.min.css";
 
@@ -60,7 +60,7 @@ function changeLanguage(language: Record<string, unknown>) {
           dense
           flat
           round
-          icon="menu"
+          :icon="matMenu"
           @click="leftMenuOpen = !leftMenuOpen"
         />
 

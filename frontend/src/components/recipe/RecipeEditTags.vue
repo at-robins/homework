@@ -15,7 +15,7 @@
       <q-chip
         class="col-auto"
         removable
-        icon-remove="add"
+        :icon-remove="matAdd"
         :color="!updateTagsErrorMessage ? 'primary' : 'negative'"
         text-color="white"
         @remove="addTag"
@@ -48,6 +48,7 @@
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { ref } from "vue";
+import { matAdd } from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

@@ -8,7 +8,7 @@
     flat
     dense
     round
-    icon="delete"
+    :icon="matDelete"
     :color="!error ? colour : 'negative'"
     :loading="loading || clickTimer !== null"
     :percentage="percentage"
@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, type Ref } from "vue";
+import { matDelete } from "@quasar/extras/material-icons";
 
 const emit = defineEmits<{
   (event: "deletionConfirmed"): void;

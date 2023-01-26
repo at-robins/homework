@@ -13,7 +13,7 @@
       @update:model-value="uploadAttachment"
     >
       <template v-slot:prepend>
-        <q-icon name="cloud_upload" />
+        <q-icon :name="matCloudUpload" />
       </template>
     </q-file>
     <q-list bordered class="rounded-borders" style="max-width: 600px">
@@ -25,7 +25,7 @@
       >
         <q-item>
           <q-item-section avatar top>
-            <q-icon name="account_tree" color="black" size="34px" />
+            <q-icon :name="matAccountTree" color="black" size="34px" />
           </q-item-section>
 
           <q-item-section top>
@@ -55,7 +55,7 @@
       </div>
       <q-item v-if="!!loadAttachmentsErrorMessage">
         <q-item-section avatar top>
-          <q-icon name="warning" color="negative" />
+          <q-icon :name="matWarning" color="negative" />
         </q-item-section>
         <q-item-section top>
           <q-item-label class="q-mt-sm">{{
@@ -73,6 +73,11 @@ import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { ref, type Ref } from "vue";
 import DeleteButton from "../general/DeleteButton.vue";
+import {
+  matAccountTree,
+  matCloudUpload,
+  matWarning,
+} from "@quasar/extras/material-icons";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();

@@ -15,7 +15,7 @@
     <q-btn
       v-if="!editTitleMode"
       round
-      icon="edit"
+      :icon="matEdit"
       class="self-start"
       :color="!updateTitleErrorMessage ? 'primary' : 'negative'"
       outline
@@ -33,7 +33,7 @@
     </q-btn>
     <q-btn v-else round class="self-start" color="primary" outline size="sm">
       <q-spinner v-if="isUpdatingTitle" color="primary" />
-      <q-icon v-else name="done" color="primary" />
+      <q-icon v-else :name="matDone" color="primary" />
     </q-btn>
   </div>
   <div class="row no-wrap">
@@ -52,7 +52,7 @@
     <q-btn
       v-if="!editReferenceMode"
       round
-      icon="edit"
+      :icon="matEdit"
       class="self-start"
       :color="!updateReferenceErrorMessage ? 'primary' : 'negative'"
       outline
@@ -68,7 +68,7 @@
     </q-btn>
     <q-btn v-else round class="self-start" color="primary" outline size="xs">
       <q-spinner v-if="isUpdatingReference" color="primary" />
-      <q-icon v-else name="done" color="primary" />
+      <q-icon v-else :name="matDone" color="primary" />
     </q-btn>
   </div>
   <div class="row">
@@ -78,14 +78,14 @@
       max="10"
       size="3em"
       :color="!updateRatingErrorMessage ? 'primary' : 'negative'"
-      icon="star_border"
-      icon-selected="star"
+      :icon="matStarBorder"
+      :icon-selected="matStar"
       :disable="!!updateRatingErrorMessage || isUpdatingRating"
     />
     <q-icon
       v-if="!!updateRatingErrorMessage"
       class="col-auto q-ma-sm self-center"
-      name="warning"
+      :name="matWarning"
       color="negative"
       size="1.5em"
     >
@@ -98,6 +98,14 @@
 import type { Recipe } from "@/scripts/types";
 import axios from "axios";
 import { nextTick, ref, watch, type Ref } from "vue";
+import {
+  matDone,
+  matEdit,
+  matStar,
+  matStarBorder,
+  matWarning,
+} from "@quasar/extras/material-icons";
+
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
